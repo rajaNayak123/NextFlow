@@ -45,7 +45,7 @@ body {
     @apply bg-white rounded-[32px] border border-zinc-100 overflow-hidden shadow-xl shadow-zinc-900/5 transition-all duration-300;
   }
   .running-node {
-    @apply ring-2 ring-blue-500 shadow-blue-glow animate-pulse;
+    @apply ring-2 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse;
   }
 }
 
