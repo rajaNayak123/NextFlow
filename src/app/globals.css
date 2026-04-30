@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --node-bg: #ffffff;
+  --node-border: rgba(0, 0, 0, 0.08);
+  --input-bg: #f3f4f6;
+  --accent: #8b5cf6;
+  --accent-foreground: #ffffff;
+  --success: #22c55e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-node-bg: var(--node-bg);
+  --color-node-border: var(--node-border);
+  --color-input-bg: var(--input-bg);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* React Flow Customizations */
+.react-flow__node {
+  border-radius: 24px;
+  background: var(--node-bg);
+  border: 1px solid var(--node-border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.react-flow__node.selected {
+  box-shadow: 0 0 0 2px var(--accent), 0 20px 40px -15px rgba(139, 92, 246, 0.3);
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 2px solid var(--accent);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.3);
+  background: var(--accent);
+}
+
+.node-header {
+  @apply flex items-center justify-between px-5 py-4 border-b border-zinc-100;
+}
+
+.node-content {
+  @apply p-5 space-y-4;
+}
+
+.input-container {
+  @apply space-y-2;
+}
+
+.input-label {
+  @apply text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1;
+}
+
+.input-field {
+  @apply w-full bg-input-bg border-none rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-accent/20 transition-all;
+}
+
+.btn-run {
+  @apply flex items-center gap-2 bg-success text-white px-4 py-1.5 rounded-full text-xs font-bold hover:brightness-110 transition-all shadow-lg shadow-success/20;
+}
+
+/* Animated Pulse for running nodes */
+.running-node {
+  position: relative;
+}
+
+.running-node::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 28px;
+  background: linear-gradient(90deg, #8b5cf6, #22c55e, #8b5cf6);
+  background-size: 200% 100%;
+  z-index: -1;
+  animation: border-pulse 2s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes border-pulse {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-zinc-200 rounded-full;
 }
