@@ -77,7 +77,7 @@ function resolveInputs(nodeId: string, nodes: any[], edges: any[], results: Reco
     if (sourceResult) {
       // Handle handles - RequestInputs nodes have field-specific handles
       if (edge.sourceHandle) {
-          const fieldId = edge.sourceHandle.split('-')[0]
+          const fieldId = edge.sourceHandle.replace('-output', '')
           const field = sourceResult.output?.fields?.find((f: any) => f.id === fieldId)
           acc[edge.targetHandle || 'input'] = field?.value || field?.previewUrl || sourceResult.output?.[fieldId]
       } else {
