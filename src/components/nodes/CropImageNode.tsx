@@ -18,7 +18,7 @@ const CropImageNode = ({ id, selected, data }: NodeProps) => {
     <div className={cn(
       "node-default min-w-[280px]",
       selected && "ring-2 ring-blue-500/50 shadow-blue-glow",
-      (status === 'running' || nodeStatus === 'running') && "running-node animate-pulse"
+      (status === 'running' || nodeStatus === 'running') && "running-node-pulse"
     )}>
       <div className="node-header">
         <div className="flex items-center gap-3">
