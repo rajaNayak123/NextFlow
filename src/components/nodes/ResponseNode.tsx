@@ -12,10 +12,15 @@ const ResponseNode = ({ id, selected, data }: NodeProps) => {
   const incomingEdges = edges.filter(e => e.target === id)
   const connectedNodes = incomingEdges.map(e => nodes.find(n => n.id === e.source)).filter(Boolean)
 
+  const status = useWorkflowStore((state) => state.status)
+  const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
+  const isRunning = status === 'running' || nodeStatus === 'running'
+
   return (
     <div className={cn(
       "w-[380px] bg-white rounded-[24px] overflow-hidden transition-all duration-300",
-      selected && "ring-2 ring-[#5e5ce6] shadow-2xl"
+      selected && "ring-2 ring-[#5e5ce6] shadow-2xl",
+      isRunning && "running-node-pulse"
     )}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[#f1f3f5]">
