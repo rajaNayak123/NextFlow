@@ -95,7 +95,13 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         })
       }
 
-      get().setHistory([data, ...get().history.slice(0, 19)])
+      // Fetch updated history
+      try {
+        const hRes = await fetch(`/api/workflows/${workflowId}/history`)
+        const historyData = await hRes.json()
+        set({ history: historyData || [] })
+      } catch (e) {}
+
       set({ status: 'completed' })
     } catch (error) {
       set({ status: 'failed' })
@@ -105,10 +111,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   async loadWorkflow(id: string) {
     const res = await fetch(`/api/workflows/${id}`)
     const workflow = await res.json()
+    
+    let historyData = []
+    try {
+      const hRes = await fetch(`/api/workflows/${id}/history`)
+      historyData = await hRes.json()
+    } catch (e) {}
+
     set({ 
       nodes: workflow.nodes, 
       edges: workflow.edges,
-      workflowId: id 
+      workflowId: id,
+      history: historyData || []
     })
   },
   
