@@ -78,6 +78,26 @@ const HistoryPanel = () => {
                     </div>
                   )}
                 </div>
+                {run.nodes && Object.keys(run.nodes).length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Node Details</div>
+                    <div className="space-y-1">
+                      {Object.entries(run.nodes).map(([nodeId, result]: [string, any]) => (
+                        <div key={nodeId} className="flex items-center justify-between text-xs py-1">
+                          <span className="text-zinc-400 truncate max-w-[120px]">{nodeId}</span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded-md font-bold uppercase text-[9px]",
+                            result.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
+                            result.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                            'bg-zinc-500/10 text-zinc-400'
+                          )}>
+                            {result.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {run.error && (
                   <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                     <AlertTriangle className="w-4 h-4 text-red-400 inline mr-2" />
