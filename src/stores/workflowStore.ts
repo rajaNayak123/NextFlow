@@ -138,11 +138,33 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       historyData = await hRes.json()
     } catch (e) {}
 
+    const history: any[] = historyData || []
+    const latestExecution = history.find(ex => ex.status === 'completed' || ex.status === 'failed' || ex.status === 'partial')
+    
+    let nodeStatuses: Record<string, any> = {}
+    let updatedNodes = workflow.nodes
+    
+    if (latestExecution && latestExecution.nodes) {
+      const results = latestExecution.nodes as Record<string, any>
+      nodeStatuses = Object.entries(results).reduce((acc, [id, res]: [string, any]) => {
+        acc[id] = res.status
+        return acc
+      }, {} as any)
+      
+      updatedNodes = workflow.nodes.map((n: any) => {
+        if (results[n.id]) {
+          return { ...n, data: { ...n.data, output: results[n.id].output } }
+        }
+        return n
+      })
+    }
+
     set({ 
-      nodes: workflow.nodes, 
+      nodes: updatedNodes, 
       edges: workflow.edges,
       workflowId: id,
-      history: historyData || []
+      history: history,
+      nodeStatuses
     })
   },
   
