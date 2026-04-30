@@ -26,7 +26,9 @@ import {
   Trash2,
   Maximize2,
   ChevronLeft,
-  Plus
+  Plus,
+  Download,
+  Upload
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useParams } from 'next/navigation'
@@ -195,7 +197,50 @@ export default function CanvasPage() {
           >
             <Redo className="w-5 h-5 text-zinc-400" />
           </button>
-          <button className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all" onClick={saveAndFit}>
+          <div className="h-8 w-[1px] bg-zinc-100" />
+          <button 
+            className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all" 
+            onClick={() => {
+              const { nodes, edges } = useWorkflowStore.getState()
+              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ nodes, edges }, null, 2))
+              const a = document.createElement('a')
+              a.href = dataStr
+              a.download = "workflow-export.json"
+              a.click()
+            }}
+            title="Export Workflow"
+          >
+            <Download className="w-5 h-5 text-zinc-400" />
+          </button>
+          <label 
+            className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all cursor-pointer"
+            title="Import Workflow"
+          >
+            <Upload className="w-5 h-5 text-zinc-400" />
+            <input 
+              type="file" 
+              accept=".json" 
+              className="hidden" 
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const reader = new FileReader()
+                reader.onload = (event) => {
+                  try {
+                    const parsed = JSON.parse(event.target?.result as string)
+                    if (parsed.nodes && parsed.edges) {
+                      saveHistory()
+                      setNodes(parsed.nodes)
+                      setEdges(parsed.edges)
+                    }
+                  } catch(e) { console.error("Invalid JSON") }
+                }
+                reader.readAsText(file)
+                e.target.value = ''
+              }} 
+            />
+          </label>
+          <button className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all" onClick={saveAndFit} title="Fit View & Save">
             <Maximize2 className="w-5 h-5 text-zinc-400" />
           </button>
           <button 
