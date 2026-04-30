@@ -103,19 +103,20 @@ async function executeNode(node: any, inputs: any) {
           if (!result.ok) {
             throw new Error(result.error ? String(result.error) : "Task failed")
           }
-          return { status: 'completed', output: result.output?.output || result.output }
+          return { status: 'completed', output: result.output }
   
         case 'gemini-3.1-pro':
+          const images = inputs.startFrame ? [{ base64: inputs.startFrame, mimeType: "image/png" }] : (inputs.images || [])
           result = await tasks.triggerAndWait("gemini-3.1-pro", {
             prompt: inputs.prompt || node.data.prompt,
             systemPrompt: inputs.systemPrompt || node.data.systemPrompt,
-            images: inputs.images || [],
+            images: images,
             model: node.data.model || "gemini-1.5-pro",
           })
           if (!result.ok) {
             throw new Error(result.error ? String(result.error) : "Task failed")
           }
-          return { status: 'completed', output: result.output?.output || result.output }
+          return { status: 'completed', output: { response: result.output?.output || result.output } }
   
         default:
           return { status: 'skipped', error: 'Unknown node type' }
