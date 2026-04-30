@@ -13,13 +13,13 @@ export const gemini = schemaTask({
       base64: z.string().optional(),
       mimeType: z.string().optional(),
     })).optional(),
-    model: z.string().optional().default("gemini-3.1-pro"),
+    model: z.string().optional().default("gemini-1.5-pro"),
   }),
   run: async (payload) => {
     const { prompt, systemPrompt, images, model } = payload
     
     const geminiModel = genAI.getGenerativeModel({ 
-      model: model || "gemini-3.1-pro",
+      model: model || "gemini-1.5-pro",
     })
 
     const generationConfig = {
