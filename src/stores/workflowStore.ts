@@ -20,7 +20,7 @@ interface WorkflowState {
   updateNodeStatus: (nodeId: string, status: 'idle' | 'running' | 'completed' | 'failed') => void
   deleteNode: (nodeId: string) => void
   setSelectedNodes: (nodes: string[]) => void
-  execute: (type: 'full' | 'partial' | 'single') => Promise<void>
+  execute: (type: 'full' | 'partial' | 'single', nodeId?: string) => Promise<void>
   loadWorkflow: (id: string) => Promise<void>
   saveWorkflow: () => Promise<void>
   setHistory: (history: any[]) => void
@@ -31,6 +31,7 @@ interface WorkflowState {
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
+  // ... existing nodes, edges, etc.
   nodes: [
     {
       id: 'request-inputs',
@@ -74,26 +75,42 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   })),
   setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
   
-  async execute(type) {
-    const { workflowId, selectedNodes } = get()
+  async execute(type, nodeId) {
+    const { workflowId, selectedNodes, nodes } = get()
     if (!workflowId) return
     
+    // Determine which nodes are part of this execution
+    const targets = nodeId ? [nodeId] : (type === 'full' ? nodes.map(n => n.id) : selectedNodes)
+    
     set({ status: 'running' })
+    targets.forEach(id => {
+      set(state => ({ nodeStatuses: { ...state.nodeStatuses, [id]: 'running' } }))
+    })
     
     try {
       const res = await fetch(`/api/workflows/${workflowId}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, selectedNodes }),
+        body: JSON.stringify({ type, selectedNodes: targets }),
       })
       const data = await res.json()
       
       // Update nodes with results
       if (data.results) {
-        Object.entries(data.results).forEach(([nodeId, result]: [string, any]) => {
-            get().updateNode(nodeId, { output: result.output })
+        Object.entries(data.results).forEach(([id, result]: [string, any]) => {
+            get().updateNode(id, { output: result.output })
+            set(state => ({ 
+              nodeStatuses: { ...state.nodeStatuses, [id]: result.status || 'completed' } 
+            }))
         })
       }
+
+      // Reset nodes that weren't executed if they were marked running
+      nodes.forEach(n => {
+        if (!data.results?.[n.id] && get().nodeStatuses[n.id] === 'running') {
+          set(state => ({ nodeStatuses: { ...state.nodeStatuses, [n.id]: 'idle' } }))
+        }
+      })
 
       // Fetch updated history
       try {
@@ -105,6 +122,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({ status: 'completed' })
     } catch (error) {
       set({ status: 'failed' })
+      targets.forEach(id => {
+        set(state => ({ nodeStatuses: { ...state.nodeStatuses, [id]: 'failed' } }))
+      })
     }
   },
   
