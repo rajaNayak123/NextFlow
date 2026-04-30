@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -10,6 +10,7 @@ import ReactFlow, {
   applyNodeChanges,
   applyEdgeChanges,
   Connection,
+  ReactFlowProvider,
 } from 'reactflow'
 import AnimatedEdge from '@/components/canvas/AnimatedEdge'
 import { useWorkflowStore } from '@/stores/workflowStore'
@@ -34,7 +35,6 @@ import {
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { useEffect } from 'react'
 
 const nodeTypes: NodeTypes = {
   'request-inputs': RequestInputsNode,
@@ -47,7 +47,7 @@ const edgeTypes = {
   animated: AnimatedEdge
 }
 
-export default function CanvasPage() {
+function CanvasContent() {
   const { user } = useUser()
   const router = useRouter()
   const params = useParams()
@@ -122,16 +122,17 @@ export default function CanvasPage() {
 
     const isImageOutput = 
       sourceNode.type === 'crop-image' || 
+      sourceNode.type === 'gemini-3.1-pro' ||
       (sourceNode.type === 'request-inputs' && sourceNode.data.fields?.find((f: any) => `${f.id}-output` === sourceHandleId)?.type === 'image')
 
     const isImageInput = 
-      targetNode.type === 'crop-image' ||
-      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'image')
+      (targetNode.type === 'crop-image' && targetHandleId === 'image') ||
+      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'startFrame')
 
     // Reject image -> text mismatch and vice versa
     if (isImageOutput && !isImageInput && targetNode.type !== 'response') {
-        // If it's an image output, it can only go to image inputs or response (which handles anything)
-        if (targetNode.type === 'gemini-3.1-pro' && ['prompt', 'systemPrompt'].includes(targetHandleId)) return false
+        // If it's an image output, it can only go to image inputs or response
+        if (targetNode.type === 'gemini-3.1-pro' && ['prompt', 'systemPrompt', 'aspectRatio', 'duration', 'resolution', 'numImages', 'imageSize'].includes(targetHandleId)) return false
     }
     
     if (!isImageOutput && isImageInput) return false
@@ -148,7 +149,6 @@ export default function CanvasPage() {
         saveHistory()
       }
       setNodes((nds: any[]) => {
-        // Prevent deleting fixed nodes
         const safeChanges = changes.filter(c => {
           if (c.type === 'remove') {
             const node = nds.find(n => n.id === c.id)
@@ -180,7 +180,6 @@ export default function CanvasPage() {
     if (event.key === 'Delete' || event.key === 'Backspace') {
       if (selectedNodes.length === 0) return
       saveHistory()
-      // Keep nodes that are NOT selected OR are NOT deletable
       setNodes((nds: any[]) => 
         nds.filter(n => 
           !selectedNodes.includes(n.id) || n.deletable === false
@@ -197,7 +196,6 @@ export default function CanvasPage() {
   return (
     <div className="h-full w-full flex bg-[#F8FAFC] overflow-hidden text-zinc-900">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-      {/* Top Bar */}
       <div className="h-20 bg-white/80 backdrop-blur-2xl border-b border-zinc-100 flex items-center px-8 gap-6 z-50">
         <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all">
           <ChevronLeft className="w-6 h-6 text-zinc-600" />
@@ -298,7 +296,6 @@ export default function CanvasPage() {
         </div>
       </div>
 
-      {/* Main Canvas */}
       <div className="flex-1 relative outline-none" ref={reactFlowWrapper} tabIndex={0} onKeyDown={onKeyDown}>
         <ReactFlow
           nodes={nodes}
@@ -332,7 +329,6 @@ export default function CanvasPage() {
         </ReactFlow>
       </div>
 
-      {/* Floating Node Picker */}
       <button
         onClick={() => setPickerOpen(true)}
         className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-3xl shadow-2xl border-4 border-white/20 backdrop-blur-xl flex items-center justify-center text-2xl hover:scale-110 transition-all duration-300 hover:shadow-blue-glow z-40"
@@ -340,12 +336,18 @@ export default function CanvasPage() {
         <Plus />
       </button>
 
-      {/* Node Picker Modal */}
       <NodePicker isOpen={pickerOpen} onClose={() => setPickerOpen(false)} />
     </div>
       
-    {/* History Panel */}
     <HistoryPanel />
   </div>
-)
+  )
+}
+
+export default function CanvasPage() {
+  return (
+    <ReactFlowProvider>
+      <CanvasContent />
+    </ReactFlowProvider>
+  )
 }
