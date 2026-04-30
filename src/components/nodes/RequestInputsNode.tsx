@@ -152,21 +152,26 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                   </>
                 )}
               </div>
+            </div>
+          ))
+        )}
+      </div>
 
-              {/* Source Handles for each field */}
-              <Handle
+      {/* Source Handles for each field */}
+      <div className="absolute -right-2 top-[100px] bottom-6 flex flex-col gap-6 pointer-events-none">
+        {fields.map((field: any, index: number) => (
+          <div key={`${field.id}-handle-wrap`} className="relative flex items-center justify-end h-[140px]">
+             <Handle
                 type="source"
                 position={Position.Right}
                 id={`${field.id}-output`}
                 className={cn(
-                  "!w-3 !h-3 !border-2",
+                  "!w-3 !h-3 !border-2 !static !translate-y-0",
                   field.type === 'image' ? "!bg-orange-500 !border-white" : "!bg-white !border-orange-400"
                 )}
-                style={{ top: '50%', transform: 'translateY(-50%)' }}
               />
-            </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
     </div>
   )
