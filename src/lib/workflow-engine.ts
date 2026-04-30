@@ -111,7 +111,7 @@ async function executeNode(node: any, inputs: any) {
             prompt: inputs.prompt || node.data.prompt,
             systemPrompt: inputs.systemPrompt || node.data.systemPrompt,
             images: inputs.images || [],
-            model: node.data.model || "gemini-3.1-pro",
+            model: node.data.model || "gemini-1.5-pro",
           })
           if (!result.ok) {
             throw new Error(result.error ? String(result.error) : "Task failed")
