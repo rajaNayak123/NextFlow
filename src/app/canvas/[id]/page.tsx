@@ -30,7 +30,10 @@ import {
   ChevronLeft,
   Plus,
   Download,
-  Upload
+  Upload,
+  Settings2,
+  RotateCcw,
+  MoreHorizontal
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useParams } from 'next/navigation'
@@ -308,39 +311,65 @@ function CanvasContent() {
           onSelectionChange={onSelectionChange}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          defaultEdgeOptions={{ type: 'animated' }}
+          defaultEdgeOptions={{ 
+            type: 'animated',
+            style: { strokeWidth: 3 }
+          }}
           fitView
           minZoom={0.1}
           maxZoom={2}
-          defaultViewport={{ x: 100, y: 100, zoom: 1 }}
-          className="bg-galaxy-bg"
+          className="bg-[#f8f9fa]"
         >
           <Background 
             variant={BackgroundVariant.Dots} 
-            gap={20} 
-            size={1}
-            className="grid-dot"
+            gap={24} 
+            size={1.5}
+            color="#e5e7eb"
           />
-          <Controls className="backdrop-blur-xl bg-white/10 border-white/20 rounded-2xl" />
           <MiniMap 
-            className="backdrop-blur-xl bg-white/10 border-white/20 rounded-2xl"
-            maskColor="rgba(0,0,0,0.6)"
+            style={{ bottom: 20, right: 20 }}
+            nodeStrokeColor={(n) => {
+              if (n.type === 'request-inputs') return '#3b82f6'
+              if (n.type === 'gemini-3.1-pro') return '#f97316'
+              if (n.type === 'crop-image') return '#ec4899'
+              return '#eee'
+            }}
+            nodeColor="#fff"
+            nodeBorderRadius={8}
+            maskColor="rgba(0, 0, 0, 0.05)"
           />
         </ReactFlow>
       </div>
 
-      <button
-        onClick={() => setPickerOpen(true)}
-        className="fixed bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-3xl shadow-2xl border-4 border-white/20 backdrop-blur-xl flex items-center justify-center text-2xl hover:scale-110 transition-all duration-300 hover:shadow-blue-glow z-40"
-      >
-        <Plus />
-      </button>
+      </div>
+      
+      {/* Floating Toolbar - Bottom Center */}
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4">
+        <button 
+          onClick={() => setPickerOpen(true)}
+          className="w-14 h-14 bg-[#1a1c21] hover:bg-black text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all active:scale-95 group"
+        >
+          <Plus className={cn("w-6 h-6 transition-transform", pickerOpen && "rotate-45")} />
+        </button>
+        
+        <div className="bg-[#1a1c21] rounded-full px-6 py-3 flex items-center gap-6 shadow-2xl border border-white/10">
+           <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">System Active</span>
+           </div>
+           <div className="h-4 w-px bg-white/10" />
+           <div className="flex items-center gap-4">
+              <Settings2 className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              <RotateCcw className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              <MoreHorizontal className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+           </div>
+        </div>
+      </div>
 
       <NodePicker isOpen={pickerOpen} onClose={() => setPickerOpen(false)} />
-    </div>
       
-    <HistoryPanel />
-  </div>
+      <HistoryPanel />
+    </div>
   )
 }
 
