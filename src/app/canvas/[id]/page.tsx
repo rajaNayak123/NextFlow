@@ -84,7 +84,8 @@ export default function CanvasPage() {
   const onConnect = useCallback(
     (params: Connection) => {
       saveHistory()
-      setEdges((eds: any[]) => [...eds, { ...params, type: 'animated' }])
+      const edgeId = `edge-${Math.random().toString(36).substr(2, 9)}`
+      setEdges((eds: any[]) => [...eds, { ...params, id: edgeId, type: 'animated' }])
     },
     [setEdges, saveHistory]
   )
