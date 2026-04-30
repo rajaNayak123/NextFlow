@@ -1,4 +1,4 @@
-import { Transloadit } from "@transloadit/sdk"
+import Transloadit from "transloadit"
 
 export const transloadit = new Transloadit({
   authKey: process.env.TRANSLOADIT_AUTH_KEY!,
