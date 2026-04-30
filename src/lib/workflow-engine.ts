@@ -1,5 +1,4 @@
-import "@/lib/trigger"
-import { cropImage, gemini } from "@/trigger"
+import { tasks } from "@/lib/trigger"
 
 function getExecutionLevels(nodes: any[], edges: any[]): string[][] {
   const inDegree: Record<string, number> = {}
@@ -94,7 +93,7 @@ async function executeNode(node: any, inputs: any) {
       let result
       switch (node.type) {
         case 'crop-image':
-          result = await cropImage.triggerAndWait({
+          result = await tasks.triggerAndWait("crop-image", {
             imageUrl: inputs.image || node.data.image,
             x: Number(inputs.x || node.data.x || 0),
             y: Number(inputs.y || node.data.y || 0),
@@ -107,7 +106,7 @@ async function executeNode(node: any, inputs: any) {
           return { status: 'completed', output: result.output?.output || result.output }
   
         case 'gemini-3.1-pro':
-          result = await gemini.triggerAndWait({
+          result = await tasks.triggerAndWait("gemini-3.1-pro", {
             prompt: inputs.prompt || node.data.prompt,
             systemPrompt: inputs.systemPrompt || node.data.systemPrompt,
             images: inputs.images || [],
