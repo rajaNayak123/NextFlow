@@ -1,71 +1,65 @@
 import { tasks } from "@/lib/trigger"
 
-function getExecutionLevels(nodes: any[], edges: any[]): string[][] {
-  const inDegree: Record<string, number> = {}
-  const graph: Record<string, string[]> = {}
-  
-  nodes.forEach(n => {
-    inDegree[n.id] = 0
-    graph[n.id] = []
-  })
-  edges.forEach(e => {
-    if (graph[e.source] && inDegree[e.target] !== undefined) {
-      graph[e.source].push(e.target)
-      inDegree[e.target]++
-    }
-  })
-
-  let queue = Object.keys(inDegree).filter(n => inDegree[n] === 0)
-  const levels: string[][] = []
-
-  while (queue.length > 0) {
-    levels.push(queue)
-    const nextQueue: string[] = []
-    for (const node of queue) {
-      for (const neighbor of graph[node]) {
-        inDegree[neighbor]--
-        if (inDegree[neighbor] === 0) {
-          nextQueue.push(neighbor)
-        }
-      }
-    }
-    queue = nextQueue
-  }
-  return levels
-}
-
-// Workflow execution engine
+// Workflow execution engine with Concurrent Fan-out
 export async function executeWorkflow(
   nodes: any[],
   edges: any[],
   type: string,
   selectedNodes: string[]
 ) {
-  const levels = getExecutionLevels(nodes, edges)
-  const totalInLevels = levels.reduce((acc, lvl) => acc + lvl.length, 0)
-  if (totalInLevels !== nodes.length) throw new Error("Cycle detected")
-
   const results: Record<string, any> = {}
-  
-  for (const level of levels) {
-    await Promise.all(level.map(async (nodeId) => {
-      const node = nodes.find(n => n.id === nodeId)
-      if (!node) return
+  const nodePromises = new Map<string, Promise<any>>()
+
+  // Initialize all nodes
+  for (const node of nodes) {
+    nodePromises.set(node.id, (async () => {
+      // 1. Wait for all dependencies
+      const incomingEdges = edges.filter(e => e.target === node.id)
+      const parentPromises = incomingEdges.map(e => nodePromises.get(e.source))
       
-      // If partial run, only run selected nodes
-      if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(nodeId)) {
-        return
+      // Wait for all parent nodes to complete
+      await Promise.all(parentPromises)
+
+      // 2. Resolve inputs from dependencies
+      const inputs = resolveInputs(node.id, nodes, edges, results)
+
+      // 3. Skip if partial run and not selected
+      if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(node.id)) {
+        results[node.id] = { status: 'skipped', output: node.data }
+        return results[node.id]
       }
 
+      // 4. Handle built-in nodes
       if (node.type === 'request-inputs' || node.type === 'response') {
-        results[nodeId] = { status: 'completed', output: node.data }
-        return
+        const startTime = Date.now()
+        results[node.id] = { 
+          status: 'completed', 
+          output: node.data,
+          duration: 0,
+          startTime,
+          endTime: startTime
+        }
+        return results[node.id]
       }
 
-      const inputs = resolveInputs(nodeId, nodes, edges, results)
-      results[nodeId] = await executeNode(node, inputs)
-    }))
+      // 5. Execute actual node
+      const startTime = Date.now()
+      const result = await executeNode(node, inputs)
+      const endTime = Date.now()
+      
+      results[node.id] = {
+        ...result,
+        startTime,
+        endTime,
+        duration: endTime - startTime,
+        inputs // Store inputs for history
+      }
+      return results[node.id]
+    })())
   }
+
+  // Wait for all node promises to settle
+  await Promise.allSettled(Array.from(nodePromises.values()))
 
   return results
 }
@@ -75,7 +69,6 @@ function resolveInputs(nodeId: string, nodes: any[], edges: any[], results: Reco
   return incoming.reduce((acc, edge) => {
     const sourceResult = results[edge.source]
     if (sourceResult) {
-      // Handle handles - RequestInputs nodes have field-specific handles
       if (edge.sourceHandle) {
           const fieldId = edge.sourceHandle.replace('-output', '')
           const field = sourceResult.output?.fields?.find((f: any) => f.id === fieldId)
