@@ -143,8 +143,36 @@ const GeminiNode = ({ id, selected, data }: NodeProps) => {
          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">$ ~0.03M</span>
       </div>
 
-      <Handle type="target" position={Position.Left} className="!w-4 !h-4 !bg-white !border-4 !border-orange-400" />
-      <Handle type="source" position={Position.Right} className="!w-4 !h-4 !bg-white !border-4 !border-blue-500" />
+      {/* Input Handles */}
+      <div className="absolute -left-2 top-0 bottom-0 flex flex-col justify-around py-12 pointer-events-none">
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="prompt" className="!w-3 !h-3 !bg-white !border-2 !border-blue-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Prompt</span>
+        </div>
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="systemPrompt" className="!w-3 !h-3 !bg-white !border-2 !border-purple-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">System</span>
+        </div>
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="image" className="!w-3 !h-3 !bg-white !border-2 !border-orange-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Image</span>
+        </div>
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="video" className="!w-3 !h-3 !bg-white !border-2 !border-red-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Video</span>
+        </div>
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="audio" className="!w-3 !h-3 !bg-white !border-2 !border-emerald-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Audio</span>
+        </div>
+        <div className="relative flex items-center group/handle">
+          <Handle type="target" position={Position.Left} id="file" className="!w-3 !h-3 !bg-white !border-2 !border-zinc-400 !static !translate-y-0" />
+          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">File</span>
+        </div>
+      </div>
+
+      {/* Output Handle */}
+      <Handle type="source" position={Position.Right} id="response" className="!w-4 !h-4 !bg-white !border-4 !border-blue-500" />
     </div>
   )
 }
