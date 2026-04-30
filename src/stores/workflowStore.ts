@@ -145,15 +145,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     let updatedNodes = workflow.nodes
     
     if (latestExecution && latestExecution.nodes) {
-      const results = latestExecution.nodes as Record<string, any>
-      nodeStatuses = Object.entries(results).reduce((acc, [id, res]: [string, any]) => {
-        acc[id] = res.status
+      const resultsArray = latestExecution.nodes as any[]
+      nodeStatuses = resultsArray.reduce((acc, res: any) => {
+        acc[res.id] = res.status
         return acc
       }, {} as any)
       
       updatedNodes = workflow.nodes.map((n: any) => {
-        if (results[n.id]) {
-          return { ...n, data: { ...n.data, output: results[n.id].output } }
+        const result = resultsArray.find(r => r.id === n.id)
+        if (result) {
+          return { ...n, data: { ...n.data, output: result.output } }
         }
         return n
       })
