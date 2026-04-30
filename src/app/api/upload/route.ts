@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { transloadit } from "@/lib/transloadit"
-import { writeFile } from "fs/promises"
-import { join } from "path"
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,12 +9,11 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const path = `/tmp/${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`
-    await writeFile(path, buffer)
 
-    // Using transloadit Node SDK
-    transloadit.addFile("my_file", path)
     const assembly = await transloadit.createAssembly({
+      uploads: {
+        "my_file": buffer
+      },
       params: {
         steps: {
           imported: {
@@ -27,7 +24,8 @@ export async function POST(req: NextRequest) {
             resize_strategy: "fit"
           }
         }
-      }
+      },
+      waitForCompletion: true
     })
 
     // Return the resulting URL from transloadit
