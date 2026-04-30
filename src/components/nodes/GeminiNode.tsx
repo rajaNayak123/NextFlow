@@ -36,7 +36,7 @@ const GeminiNode = ({ id, selected, data }: NodeProps) => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => execute('single')}
+            onClick={() => execute('single', id)}
             className="flex items-center gap-2 bg-[#22C55E] text-white px-5 py-2 rounded-full text-[13px] font-bold hover:brightness-110 transition-all shadow-lg shadow-green-500/20"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
