@@ -1,9 +1,8 @@
 'use client'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Plus, Info, Copy, Trash2, Maximize2, GripVertical, Type, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Plus, Info, Copy, Trash2, Maximize2, GripVertical, Type, Image as ImageIcon, Loader2, MoreVertical, RotateCcw } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
 
 const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   const updateNode = useWorkflowStore((state) => state.updateNode)
@@ -12,19 +11,11 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   const addField = (type: 'text_field' | 'image_field' = 'text_field') => {
     const newField = {
       id: `field-${Date.now()}`,
-      name: type === 'text_field' ? 'New prompt' : 'New image',
+      name: type === 'text_field' ? 'Car prompt' : 'Input image',
       value: '',
       type: type
     }
     updateNode(id, { fields: [...fields, newField] })
-  }
-
-  const handleFileChange = (fieldId: string, file: File) => {
-    const previewUrl = URL.createObjectURL(file)
-    const newFields = fields.map((f: any) => 
-      f.id === fieldId ? { ...f, value: file.name, previewUrl } : f
-    )
-    updateNode(id, { fields: newFields })
   }
 
   const status = useWorkflowStore((state) => state.status)
@@ -33,76 +24,58 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
 
   return (
     <div className={cn(
-      "w-[380px] bg-white rounded-[24px] overflow-hidden transition-all duration-300",
-      selected && "ring-2 ring-[#5e5ce6] shadow-2xl",
+      "bg-white border border-gray-200 rounded-xl shadow-lg min-w-[320px] overflow-hidden transition-all",
+      selected && "ring-2 ring-blue-500 shadow-xl",
       isRunning && "running-node-pulse"
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-[#f1f3f5]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50/50">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-[#1a1c21]">Request-Inputs</span>
-          <Info className="w-4 h-4 text-zinc-400 cursor-help" />
+           <Type className="w-4 h-4 text-gray-400" />
+           <span className="text-xs font-bold text-gray-700">Request-Inputs</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button 
             onClick={() => addField('text_field')}
-            title="Add text input"
-            className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors"
+            className="p-1 hover:bg-gray-200 rounded text-gray-600 transition-colors"
+            title="Add Input"
           >
-            <Type className="w-5 h-5 text-zinc-600" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
-          <button 
-            onClick={() => addField('image_field')}
-            title="Add image input"
-            className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors"
-          >
-            <ImageIcon className="w-5 h-5 text-zinc-600" />
-          </button>
+          <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><Info className="w-3.5 h-3.5" /></button>
+          <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><MoreVertical className="w-3.5 h-3.5" /></button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         {fields.length === 0 ? (
-          <div className="py-8 text-center border-2 border-dashed border-[#f1f3f5] rounded-2xl">
-            <p className="text-sm text-zinc-400 font-medium">No inputs defined yet</p>
+          <div className="py-10 text-center border-2 border-dashed border-gray-50 rounded-xl">
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No inputs defined</p>
           </div>
         ) : (
-          fields.map((field: any, index: number) => (
-            <div key={field.id} className="space-y-3 group relative">
+          fields.map((field: any) => (
+            <div key={field.id} className="space-y-2 relative group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <GripVertical className="w-4 h-4 text-zinc-300 cursor-grab" />
-                  <input
-                    type="text"
-                    className="text-base font-bold text-[#1a1c21] bg-transparent border-none focus:ring-0 p-0 w-auto min-w-[50px]"
-                    value={field.name}
-                    onChange={(e) => {
-                      const newFields = fields.map((f: any) => 
-                        f.id === field.id ? { ...f, name: e.target.value } : f
-                      )
-                      updateNode(id, { fields: newFields })
-                    }}
-                  />
-                  {field.type === 'image_field' ? <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> : <Type className="w-3.5 h-3.5 text-zinc-300" />}
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{field.name}</label>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-red-500 transition-colors" onClick={() => {
-                    const newFields = fields.filter((f: any) => f.id !== field.id)
-                    updateNode(id, { fields: newFields })
-                  }}>
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><Copy className="w-3 h-3" /></button>
+                   <button className="p-1 hover:bg-red-50 rounded text-red-400" onClick={() => {
+                     const newFields = fields.filter((f: any) => f.id !== field.id)
+                     updateNode(id, { fields: newFields })
+                   }}>
+                     <Trash2 className="w-3 h-3" />
+                   </button>
                 </div>
               </div>
               
               <div className="relative">
                 {field.type === 'text_field' ? (
                   <textarea
-                    className="w-full bg-[#f8f9fa] border-none rounded-2xl px-5 py-4 text-base text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-[#5e5ce6]/10 transition-all resize-none min-h-[120px]"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 text-xs text-gray-800 placeholder:text-gray-300 focus:ring-1 focus:ring-blue-500 min-h-[100px] resize-none font-medium outline-none"
                     placeholder="Enter text..."
                     value={field.value}
                     onChange={(e) => {
@@ -113,44 +86,18 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                     }}
                   />
                 ) : (
-                  <div className="space-y-4">
-                    <div 
-                      className="w-full bg-[#f8f9fa] border-2 border-dashed border-zinc-200 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 hover:bg-zinc-50 transition-all cursor-pointer relative"
-                      onClick={() => document.getElementById(`file-${field.id}`)?.click()}
-                    >
-                      {field.previewUrl ? (
-                        <img src={field.previewUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
-                      ) : (
-                        <>
-                          <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-zinc-400" />
-                          </div>
-                          <p className="text-sm font-medium text-zinc-400">Click to upload image</p>
-                        </>
-                      )}
-                      <input 
-                        type="file" 
-                        id={`file-${field.id}`} 
-                        className="hidden" 
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) handleFileChange(field.id, file)
-                        }}
-                      />
-                    </div>
+                  <div className="w-full bg-gray-50 border-2 border-dashed border-gray-100 rounded-lg p-6 flex flex-col items-center justify-center gap-2 hover:bg-gray-100/50 transition-all cursor-pointer">
+                     <ImageIcon className="w-5 h-5 text-gray-200" />
+                     <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest text-center">Drop image here</span>
                   </div>
                 )}
                 
-                {/* Source Handle for this specific field */}
+                {/* Field-aligned Handle */}
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={`${field.id}-output`}
-                  className={cn(
-                    "!w-4 !h-4 !border-white !border-[3px] !shadow-md !static !absolute !-right-[34px] !top-1/2 !-translate-y-1/2",
-                    field.type === 'image_field' ? "!bg-blue-500" : "!bg-[#ff9500]"
-                  )}
+                  className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !-right-5.5"
                   style={{ top: '50%' }}
                 />
               </div>
