@@ -1,3 +1,4 @@
+import "@/lib/trigger"
 import { cropImage, gemini } from "@/trigger"
 
 function getExecutionLevels(nodes: any[], edges: any[]): string[][] {
