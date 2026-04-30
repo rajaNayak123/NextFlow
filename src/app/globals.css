@@ -40,6 +40,15 @@ body {
   box-shadow: 0 0 0 2px var(--accent), 0 20px 40px -15px rgba(139, 92, 246, 0.3);
 }
 
+@layer components {
+  .node-default {
+    @apply bg-white rounded-[32px] border border-zinc-100 overflow-hidden shadow-xl shadow-zinc-900/5 transition-all duration-300;
+  }
+  .running-node {
+    @apply ring-2 ring-blue-500 shadow-blue-glow animate-pulse;
+  }
+}
+
 .react-flow__handle {
   width: 10px;
   height: 10px;
