@@ -30,9 +30,9 @@ const HistoryPanel = () => {
       
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {history.slice(0, 10).map((run: any) => (
-          <div key={run.executionId} className="group">
+          <div key={run.id} className="group">
             <button
-              onClick={() => setExpanded(expanded === run.executionId ? null : run.executionId)}
+              onClick={() => setExpanded(expanded === run.id ? null : run.id)}
               className="w-full flex items-center justify-between p-4 hover:bg-white/10 rounded-2xl transition-all duration-200 border border-white/10 group-hover:border-white/20"
             >
               <div className="space-y-1">
@@ -53,10 +53,10 @@ const HistoryPanel = () => {
                   <div className="text-xs text-zinc-500">{run.duration.toFixed(1)}s</div>
                 )}
               </div>
-              <ChevronRight className={`w-5 h-5 text-zinc-400 transition-transform ${expanded === run.executionId ? 'rotate-90' : ''}`} />
+              <ChevronRight className={`w-5 h-5 text-zinc-400 transition-transform ${expanded === run.id ? 'rotate-90' : ''}`} />
             </button>
             
-            {expanded === run.executionId && (
+            {expanded === run.id && (
               <div className="mt-3 p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="space-y-1">
