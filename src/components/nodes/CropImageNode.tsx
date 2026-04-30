@@ -9,6 +9,9 @@ const CropImageNode = ({ id, selected, data }: NodeProps) => {
   const updateNode = useWorkflowStore((state) => state.updateNode)
   const status = useWorkflowStore((state) => state.status)
   const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
+  const edges = useWorkflowStore((state) => state.edges)
+
+  const isHandleConnected = (handleId: string) => edges.some(e => e.target === id && e.targetHandle === handleId)
 
   const handleChange = (field: string, value: string) => {
     updateNode(id, { [field]: value })
@@ -40,43 +43,50 @@ const CropImageNode = ({ id, selected, data }: NodeProps) => {
             className="w-4 h-4 bg-orange-500 border-2 border-white shadow-lg !bg-orange-500 hover:!scale-110"
             style={{ top: 32 }}
           />
-          <div className="w-full h-10 px-3 bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl flex items-center text-sm text-zinc-500">
-            Connect image input
+          <div className={cn(
+            "w-full h-10 px-3 bg-zinc-50/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl flex items-center text-sm text-zinc-500",
+            isHandleConnected('image') && "opacity-50 border-orange-500/30 text-orange-400 font-medium"
+          )}>
+            {isHandleConnected('image') ? "Connected from parent" : "Connect image input"}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className={cn(isHandleConnected('x') && "opacity-40")}>
             <label className="block text-xs font-medium text-zinc-400 mb-1">X Position (%)</label>
             <input 
               type="number" 
+              disabled={isHandleConnected('x')}
               defaultValue={data.x ?? 0}
               onChange={(e) => handleChange('x', e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-zinc-300/50 dark:border-zinc-700/50 rounded-xl text-sm focus:ring-blue-500 focus:outline-none" 
             />
           </div>
-          <div>
+          <div className={cn(isHandleConnected('y') && "opacity-40")}>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Y Position (%)</label>
             <input 
               type="number" 
+              disabled={isHandleConnected('y')}
               defaultValue={data.y ?? 0}
               onChange={(e) => handleChange('y', e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-zinc-300/50 dark:border-zinc-700/50 rounded-xl text-sm focus:ring-blue-500 focus:outline-none" 
             />
           </div>
-          <div>
+          <div className={cn(isHandleConnected('w') && "opacity-40")}>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Width (%)</label>
             <input 
               type="number" 
+              disabled={isHandleConnected('w')}
               defaultValue={data.w ?? 100}
               onChange={(e) => handleChange('w', e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-zinc-300/50 dark:border-zinc-700/50 rounded-xl text-sm focus:ring-blue-500 focus:outline-none" 
             />
           </div>
-          <div>
+          <div className={cn(isHandleConnected('h') && "opacity-40")}>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Height (%)</label>
             <input 
               type="number" 
+              disabled={isHandleConnected('h')}
               defaultValue={data.h ?? 100}
               onChange={(e) => handleChange('h', e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-zinc-300/50 dark:border-zinc-700/50 rounded-xl text-sm focus:ring-blue-500 focus:outline-none" 
