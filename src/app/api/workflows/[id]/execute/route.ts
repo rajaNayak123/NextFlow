@@ -42,7 +42,7 @@ export async function POST(
     where: { id: execution.id },
     data: {
       status: "completed",
-      nodes: results,
+      nodes: Object.entries(results).map(([id, res]: [string, any]) => ({ id, ...res })),
       duration: (Date.now() - new Date(execution.createdAt).getTime()) / 1000
     }
   })
