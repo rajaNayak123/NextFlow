@@ -19,6 +19,7 @@ import CropImageNode from '@/components/nodes/CropImageNode'
 import GeminiNode from '@/components/nodes/GeminiNode'
 import ResponseNode from '@/components/nodes/ResponseNode'
 import NodePicker from '@/components/canvas/NodePicker'
+import HistoryPanel from '@/components/canvas/HistoryPanel'
 import {
   Play,
   Undo,
@@ -89,9 +90,30 @@ export default function CanvasPage() {
   )
 
   const isValidConnection = useCallback((connection: Connection) => {
+    if (connection.source === connection.target) return false
+
     const sourceNode = nodes.find((n: any) => n.id === connection.source)
     const targetNode = nodes.find((n: any) => n.id === connection.target)
     if (!sourceNode || !targetNode) return false
+
+    // DAG Cycle detection
+    const hasCycle = (source: string, target: string) => {
+      const visited = new Set<string>()
+      const queue = [target]
+      
+      while (queue.length > 0) {
+        const current = queue.shift()!
+        if (current === source) return true
+        if (visited.has(current)) continue
+        visited.add(current)
+        
+        const neighbors = edges.filter(e => e.source === current).map(e => e.target)
+        queue.push(...neighbors)
+      }
+      return false
+    }
+
+    if (hasCycle(connection.source!, connection.target!)) return false
 
     const imageOutputs = ['crop-image']
     const textOutputs = ['request-inputs', 'gemini-3.1-pro']
@@ -103,7 +125,7 @@ export default function CanvasPage() {
     if (textOutputs.includes(sourceNode.type) && imageInputs.includes(targetNode.type)) return false;
 
     return true
-  }, [nodes])
+  }, [nodes, edges])
 
   const onNodesChange = useCallback(
     (changes: any[]) => {
@@ -160,7 +182,8 @@ export default function CanvasPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-zinc-900">
+    <div className="h-full w-full flex bg-[#F8FAFC] overflow-hidden text-zinc-900">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
       {/* Top Bar */}
       <div className="h-20 bg-white/80 backdrop-blur-2xl border-b border-zinc-100 flex items-center px-8 gap-6 z-50">
         <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all">
@@ -307,5 +330,9 @@ export default function CanvasPage() {
       {/* Node Picker Modal */}
       <NodePicker isOpen={pickerOpen} onClose={() => setPickerOpen(false)} />
     </div>
-  )
+      
+    {/* History Panel */}
+    <HistoryPanel />
+  </div>
+)
 }
