@@ -250,6 +250,15 @@ export default function CanvasPage() {
             <Play className="w-4 h-4 fill-current" />
             Run Workflow
           </button>
+          {selectedNodes.length > 0 && (
+            <button 
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-[20px] font-bold text-sm shadow-xl shadow-blue-500/20 transition-all duration-300 ml-2"
+              onClick={() => execute('partial')}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              Run Selected ({selectedNodes.length})
+            </button>
+          )}
         </div>
       </div>
 
