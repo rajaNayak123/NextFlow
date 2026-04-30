@@ -6,6 +6,8 @@ import ReactFlow, {
   MiniMap,
   useReactFlow,
   NodeTypes,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from 'reactflow'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import 'reactflow/dist/style.css'
@@ -82,21 +84,26 @@ export default function CanvasPage() {
 
   const onNodesChange = useCallback(
     (changes: any[]) => {
-      setNodes((nds: any[]) =>
-        nds.map((node, idx) => {
-          const change = changes.find(c => c.id === node.id)
-          if (!change) return node
-          
-          // Prevent deleting fixed nodes
-          if (node.deletable === false && changes.some(c => c.id === node.id && c.type === 'remove')) {
-            return node
+      setNodes((nds: any[]) => {
+        // Prevent deleting fixed nodes
+        const safeChanges = changes.filter(c => {
+          if (c.type === 'remove') {
+            const node = nds.find(n => n.id === c.id)
+            if (node && node.deletable === false) return false
           }
-          
-          return { ...node, ...change }
+          return true
         })
-      )
+        return applyNodeChanges(safeChanges, nds) as any[]
+      })
     },
     [setNodes]
+  )
+
+  const onEdgesChange = useCallback(
+    (changes: any[]) => {
+      setEdges((eds: any[]) => applyEdgeChanges(changes, eds) as any[])
+    },
+    [setEdges]
   )
 
   const onSelectionChange = useCallback(({ nodes: selected }: any) => {
@@ -162,7 +169,7 @@ export default function CanvasPage() {
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
-          onEdgesChange={() => {}} // Edges managed by workflow store
+          onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={setRfInstance}
           onSelectionChange={onSelectionChange}
