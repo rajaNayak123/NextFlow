@@ -1,4 +1,4 @@
-import { tasks } from "@trigger.dev/sdk"
+import { tasks } from "@trigger.dev/sdk/v3"
 
 // Topological sort for DAG execution
 export function topologicalSort(nodes: any[], edges: any[]) {
@@ -103,7 +103,7 @@ async function executeNode(node: any, inputs: any) {
           if (!result.ok) {
             throw new Error(result.error ? String(result.error) : "Task failed")
           }
-          return { status: 'completed', output: result.output }
+          return { status: 'completed', output: result.output.output }
   
         case 'gemini-3.1-pro':
           result = await tasks.triggerAndWait("gemini-3.1-pro", {
@@ -115,7 +115,7 @@ async function executeNode(node: any, inputs: any) {
           if (!result.ok) {
             throw new Error(result.error ? String(result.error) : "Task failed")
           }
-          return { status: 'completed', output: result.output }
+          return { status: 'completed', output: result.output.output }
   
         default:
           return { status: 'skipped', error: 'Unknown node type' }

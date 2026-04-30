@@ -1,7 +1,7 @@
-import { task, wait } from "@trigger.dev/sdk"
+import { schemaTask, wait } from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 
-export const cropImage = task({
+export const cropImage = schemaTask({
   id: "crop-image",
   schema: z.object({
     imageUrl: z.string().url(),
@@ -20,7 +20,7 @@ export const cropImage = task({
     const croppedUrl = `${process.env.NEXT_PUBLIC_NOSTALGIA_CDN_URL || 'https://example.com'}/cropped/${Date.now()}.jpg`
     
     return {
-      croppedImageUrl: croppedUrl,
+      output: croppedUrl,
       inputImageUrl: imageUrl,
       cropParams: { x, y, width, height }
     }
