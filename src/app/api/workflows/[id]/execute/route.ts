@@ -42,7 +42,7 @@ export async function POST(
     data: {
       status: "completed",
       nodes: results,
-      duration: Date.now() - new Date(execution.createdAt).getTime() / 1000
+      duration: (Date.now() - new Date(execution.createdAt).getTime()) / 1000
     }
   })
 
