@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Info, Play, ChevronDown, Plus, Minus, Maximize2, Settings2, Sparkles } from 'lucide-react'
+import { Info, Play, ChevronDown, Plus, RotateCcw, MoreHorizontal, Maximize2, Settings2, Sparkles, ChevronRight, Upload, Link2 } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
 
 const GeminiNode = ({ id, selected, data }: NodeProps) => {
-  const [activeTab, setActiveTab] = useState('text-to-image')
+  const [activeTab, setActiveTab] = useState(data.type === 'video' ? 'image-to-video' : 'text-to-image')
   const updateNode = useWorkflowStore((state) => state.updateNode)
   const status = useWorkflowStore((state) => state.status)
   const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
@@ -15,164 +15,218 @@ const GeminiNode = ({ id, selected, data }: NodeProps) => {
   const [prompt, setPrompt] = useState(data.prompt || '')
   const [imageSize, setImageSize] = useState(data.imageSize || '4:3')
   const [numImages, setNumImages] = useState(data.numImages || 1)
+  const [aspectRatio, setAspectRatio] = useState(data.aspectRatio || '16:9')
+  const [duration, setDuration] = useState(data.duration || '8')
+  const [resolution, setResolution] = useState(data.resolution || '720p')
 
   useEffect(() => {
-    updateNode(id, { prompt, imageSize, numImages })
-  }, [prompt, imageSize, numImages])
+    updateNode(id, { prompt, imageSize, numImages, aspectRatio, duration, resolution })
+  }, [prompt, imageSize, numImages, aspectRatio, duration, resolution])
 
   const isRunning = status === 'running' || nodeStatus === 'running'
+  const isVideo = data.type === 'video' || id.toLowerCase().includes('sora')
+  const title = data.title || (isVideo ? 'Sora 2' : 'FLUX 2 Pro')
 
   return (
     <div className={cn(
-      "w-[380px] bg-white rounded-[40px] overflow-hidden transition-all duration-500",
-      selected && "ring-2 ring-purple-500 shadow-2xl",
-      isRunning && "running-node"
+      "w-[420px] bg-white rounded-[24px] overflow-hidden transition-all duration-500",
+      selected && "ring-2 ring-[#5e5ce6] shadow-2xl",
+      isRunning && "running-node-pulse"
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-50">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-[#f1f3f5]">
         <div className="flex items-center gap-3">
-          <span className="text-base font-bold text-zinc-900">Gemini 3.1 Pro</span>
-          <Info className="w-4 h-4 text-zinc-300" />
+          <span className="text-lg font-bold text-[#1a1c21]">{title}</span>
+          <div className="flex items-center gap-2 ml-4">
+            <Info className="w-4 h-4 text-zinc-300" />
+            <RotateCcw className="w-4 h-4 text-zinc-300 cursor-pointer" />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => execute('single', id)}
-            className="flex items-center gap-2 bg-[#22C55E] text-white px-5 py-2 rounded-full text-[13px] font-bold hover:brightness-110 transition-all shadow-lg shadow-green-500/20"
+            className="flex items-center gap-2 bg-[#dcfce7] text-[#16a34a] px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-[#bbf7d0] transition-all"
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
+            <Play className="w-4 h-4 fill-current" />
             Run
           </button>
-          <button className="w-8 h-8 flex items-center justify-center hover:bg-zinc-50 rounded-full transition-colors">
-            <Settings2 className="w-4 h-4 text-zinc-400" />
+          <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+            <MoreHorizontal className="w-5 h-5 text-zinc-400" />
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="px-8 pt-6">
-        <div className="flex p-1 bg-[#F5F6F8] rounded-[24px]">
+      <div className="px-6 pt-6">
+        <div className="flex p-1 bg-[#f8f9fa] rounded-2xl">
           <button 
-            onClick={() => setActiveTab('text-to-image')}
+            onClick={() => setActiveTab(isVideo ? 'text-to-video' : 'text-to-image')}
             className={cn(
-              "flex-1 py-2.5 rounded-[20px] text-xs font-bold transition-all",
-              activeTab === 'text-to-image' ? "bg-[#1A1C21] text-white shadow-lg" : "text-zinc-400 hover:text-zinc-600"
+              "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
+              activeTab === (isVideo ? 'text-to-video' : 'text-to-image') ? "bg-[#1a1c21] text-white shadow-lg" : "text-zinc-400"
             )}
           >
-            Text to Image
+            {isVideo ? 'Text to Video' : 'Text to Image'}
           </button>
           <button 
-            onClick={() => setActiveTab('image-to-image')}
+            onClick={() => setActiveTab(isVideo ? 'image-to-video' : 'image-to-image')}
             className={cn(
-              "flex-1 py-2.5 rounded-[20px] text-xs font-bold transition-all",
-              activeTab === 'image-to-image' ? "bg-[#1A1C21] text-white shadow-lg" : "text-zinc-400 hover:text-zinc-600"
+              "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
+              activeTab === (isVideo ? 'image-to-video' : 'image-to-image') ? "bg-[#1a1c21] text-white shadow-lg" : "text-zinc-400"
             )}
           >
-            Image to Image
+             {isVideo ? 'Image to Video' : 'Image to Image'}
           </button>
         </div>
       </div>
 
       {/* Inputs */}
-      <div className="p-8 space-y-8">
-        <div className="space-y-3">
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Prompt</span>
-            <span className="text-red-500">*</span>
+      <div className="p-6 space-y-5">
+        {activeTab.includes('image-to') && (
+          <div className="space-y-3 relative">
+            <div className="flex items-center gap-2">
+               <span className="text-sm font-bold text-zinc-500">Start Frame</span>
+               <span className="text-red-500">*</span>
+            </div>
+            <div className="w-full bg-[#f8f9fa] border-none rounded-2xl px-6 py-6 flex items-center justify-center gap-2 text-zinc-400 border-2 border-dashed border-zinc-100">
+               <Upload className="w-4 h-4" />
+               <span className="text-sm font-medium">Upload image</span>
+            </div>
+            <Handle type="target" position={Position.Left} id="startFrame" className="!w-4 !h-4 !bg-[#007aff] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-[55px]" />
+          </div>
+        )}
+
+        <div className="space-y-3 relative">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-zinc-500">Prompt</span>
+              <span className="text-red-500">*</span>
+            </div>
+            <button className="w-8 h-8 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-lg transition-colors">
+              <Plus className="w-4 h-4 text-zinc-400" />
+            </button>
           </div>
           <div className="relative">
             <textarea 
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the image you want to create..."
-              className="w-full bg-[#F5F6F8] border-none rounded-[28px] px-6 py-6 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-purple-500/10 min-h-[140px] resize-none"
+              placeholder={isVideo ? "make car racing" : "Describe the image you want to create..."}
+              className="w-full bg-[#f8f9fa] border-none rounded-2xl px-6 py-5 text-base text-[#1a1c21] placeholder:text-zinc-300 focus:ring-2 focus:ring-[#5e5ce6]/10 min-h-[140px] resize-none"
             />
-            <Maximize2 className="absolute bottom-6 right-6 w-4 h-4 text-zinc-300" />
+            <Maximize2 className="absolute bottom-5 right-5 w-4 h-4 text-zinc-300" />
           </div>
+          <Handle type="target" position={Position.Left} id="prompt" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-[60px]" />
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Number of Images</span>
-            <Info className="w-3.5 h-3.5 text-zinc-300" />
-          </div>
-          <div className="flex items-center gap-3 bg-[#F5F6F8] rounded-2xl p-1.5 border border-zinc-100">
-            <button onClick={() => setNumImages(Math.max(1, numImages - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-xl text-zinc-400 hover:text-zinc-900 transition-all"><Minus className="w-3.5 h-3.5" /></button>
-            <span className="text-sm font-bold min-w-[20px] text-center">{numImages}</span>
-            <button onClick={() => setNumImages(numImages + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-xl text-zinc-400 hover:text-zinc-900 transition-all"><Plus className="w-3.5 h-3.5" /></button>
-          </div>
-        </div>
+        {isVideo ? (
+          <>
+            <div className="flex items-center justify-between relative">
+              <span className="text-sm font-bold text-zinc-500">Aspect Ratio</span>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
+                  <span className="text-sm font-bold text-[#1a1c21]">{aspectRatio}</span>
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+                  <Plus className="w-4 h-4 text-zinc-400" />
+                </button>
+              </div>
+              <Handle type="target" position={Position.Left} id="aspectRatio" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
+            </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Image Size</span>
-            <Info className="w-3.5 h-3.5 text-zinc-300" />
-          </div>
-          <button className="flex items-center justify-between gap-4 bg-[#F5F6F8] rounded-2xl px-5 py-3 border border-zinc-100 min-w-[140px] group">
-            <span className="text-sm font-bold text-zinc-900">{imageSize}</span>
-            <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:translate-y-0.5 transition-transform" />
-          </button>
-        </div>
+            <div className="flex items-center justify-between relative">
+              <span className="text-sm font-bold text-zinc-500">Duration</span>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
+                  <span className="text-sm font-bold text-[#1a1c21]">{duration}</span>
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+                  <Plus className="w-4 h-4 text-zinc-400" />
+                </button>
+              </div>
+              <Handle type="target" position={Position.Left} id="duration" className="!w-4 !h-4 !bg-[#ff2d55] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
+            </div>
 
-        <div className="flex items-center gap-2 cursor-pointer group">
-          <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600" />
-          <span className="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-600 uppercase tracking-widest">Settings</span>
+            <div className="flex items-center justify-between relative">
+              <span className="text-sm font-bold text-zinc-500">Resolution</span>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
+                  <span className="text-sm font-bold text-[#1a1c21]">{resolution}</span>
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+                  <Plus className="w-4 h-4 text-zinc-400" />
+                </button>
+              </div>
+              <Handle type="target" position={Position.Left} id="resolution" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between relative">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-zinc-500">Number of Images</span>
+                <Info className="w-3.5 h-3.5 text-zinc-300" />
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
+                  <span className="text-sm font-bold text-[#1a1c21]">{numImages}</span>
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+                  <Plus className="w-4 h-4 text-zinc-400" />
+                </button>
+              </div>
+              <Handle type="target" position={Position.Left} id="numImages" className="!w-4 !h-4 !bg-[#ff2d55] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
+            </div>
+
+            <div className="flex items-center justify-between relative">
+              <span className="text-sm font-bold text-zinc-500">Image Size</span>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
+                  <span className="text-sm font-bold text-[#1a1c21]">{imageSize}</span>
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
+                  <Plus className="w-4 h-4 text-zinc-400" />
+                </button>
+              </div>
+              <Handle type="target" position={Position.Left} id="imageSize" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
+            </div>
+          </>
+        )}
+
+        <div className="flex items-center gap-2 cursor-pointer group pt-2">
+          <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 transition-transform" />
+          <span className="text-sm font-bold text-zinc-400 group-hover:text-zinc-600">Settings</span>
         </div>
 
         {/* Output Section */}
-        <div className="pt-6 border-t border-zinc-50 space-y-4">
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Generated Images</span>
-          <div className="bg-[#F5F6F8] rounded-[32px] aspect-square flex flex-col items-center justify-center gap-3 border-2 border-dashed border-zinc-100">
+        <div className="pt-6 border-t border-[#f1f3f5] space-y-4">
+          <span className="text-sm font-bold text-zinc-400">{isVideo ? 'Generated Video' : 'Generated Images'}</span>
+          <div className="bg-[#f8f9fa] rounded-[24px] aspect-video flex flex-col items-center justify-center gap-3 border-2 border-[#f1f3f5]">
              {data.output?.response ? (
                 <div className="w-full h-full p-2">
                    <p className="text-sm text-zinc-700 p-4">{data.output.response}</p>
                 </div>
              ) : (
-                <>
-                  <p className="text-xs text-zinc-400 font-medium italic">No output yet</p>
-                </>
+                <p className="text-sm text-zinc-400 font-medium italic">No output yet</p>
              )}
           </div>
         </div>
       </div>
 
-      <div className="px-8 py-4 bg-zinc-50/50 flex items-center justify-between">
+      <div className="px-6 py-4 bg-[#f8f9fa] flex items-center justify-between border-t border-[#f1f3f5]">
          <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">Gemini-Vision Ready</span>
+            <Link2 className="w-4 h-4 text-zinc-400" />
+            <span className="text-xs font-bold text-zinc-400">~0.03M</span>
          </div>
-         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">$ ~0.03M</span>
-      </div>
-
-      {/* Input Handles */}
-      <div className="absolute -left-2 top-0 bottom-0 flex flex-col justify-around py-12 pointer-events-none">
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="prompt" className="!w-3 !h-3 !bg-white !border-2 !border-blue-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Prompt</span>
-        </div>
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="systemPrompt" className="!w-3 !h-3 !bg-white !border-2 !border-purple-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">System</span>
-        </div>
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="image" className="!w-3 !h-3 !bg-white !border-2 !border-orange-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Image</span>
-        </div>
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="video" className="!w-3 !h-3 !bg-white !border-2 !border-red-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Video</span>
-        </div>
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="audio" className="!w-3 !h-3 !bg-white !border-2 !border-emerald-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">Audio</span>
-        </div>
-        <div className="relative flex items-center group/handle">
-          <Handle type="target" position={Position.Left} id="file" className="!w-3 !h-3 !bg-white !border-2 !border-zinc-400 !static !translate-y-0" />
-          <span className="absolute left-4 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter opacity-0 group-hover/handle:opacity-100 transition-opacity">File</span>
-        </div>
+         <Info className="w-4 h-4 text-zinc-300" />
       </div>
 
       {/* Output Handle */}
-      <Handle type="source" position={Position.Right} id="response" className="!w-4 !h-4 !bg-white !border-4 !border-blue-500" />
+      <Handle type="source" position={Position.Right} id="response" className="!w-4 !h-4 !bg-[#007aff] !border-white !border-[3px] !shadow-sm !absolute !-right-[12px] !top-1/2 !-translate-y-1/2" />
     </div>
   )
 }
