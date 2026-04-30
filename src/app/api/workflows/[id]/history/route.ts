@@ -4,14 +4,15 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const history = await prisma.execution.findMany({
     where: { 
-      workflowId: params.id,
+      workflowId: id,
       userId 
     },
     orderBy: { createdAt: "desc" },

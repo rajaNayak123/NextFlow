@@ -5,14 +5,15 @@ import { executeWorkflow } from "@/lib/workflow-engine"
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { type = "full", selectedNodes = [] } = await req.json()
   const workflow = await prisma.workflow.findFirst({
-    where: { id: params.id, userId }
+    where: { id: id, userId }
   })
 
   if (!workflow) {
@@ -25,7 +26,7 @@ export async function POST(
   // Create execution record
   const execution = await prisma.execution.create({
     data: {
-      workflowId: params.id,
+      workflowId: id,
       userId,
       status: "running",
       type,
@@ -48,7 +49,7 @@ export async function POST(
 
   // Update workflow status
   await prisma.workflow.update({
-    where: { id: params.id },
+    where: { id: id },
     data: { status: "completed" }
   })
 
