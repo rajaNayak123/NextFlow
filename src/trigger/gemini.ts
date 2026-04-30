@@ -1,10 +1,10 @@
-import { task } from "@trigger.dev/sdk"
+import { schemaTask } from "@trigger.dev/sdk/v3"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { z } from "zod"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "dummy")
 
-export const gemini = task({
+export const gemini = schemaTask({
   id: "gemini-3.1-pro",
   schema: z.object({
     prompt: z.string().min(1),
@@ -44,7 +44,8 @@ export const gemini = task({
     } else {
       // Text only
       const promptText = systemPrompt ? `System: ${systemPrompt}\n\nUser: ${prompt}` : prompt
-      result = await geminiModel.generateContent(promptText, {
+      result = await geminiModel.generateContent({
+        contents: [{ role: "user", parts: [{ text: promptText }] }],
         generationConfig,
       })
     }
@@ -53,7 +54,7 @@ export const gemini = task({
     const text = response.text()
 
     return {
-      response: text,
+      output: text,
       usage: response.usageMetadata,
     }
   },
