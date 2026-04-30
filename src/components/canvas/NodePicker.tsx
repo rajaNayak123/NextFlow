@@ -20,32 +20,19 @@ const NodePicker = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   const addNode = useWorkflowStore((state) => state.addNode)
 
   const nodeCategories: Record<string, NodeItem[]> = {
-    'AI Models': [
-      { 
-        id: 'flux-2-pro', 
-        type: 'gemini-3.1-pro', 
-        name: 'FLUX 2 Pro', 
-        icon: <Brain className="w-6 h-6 text-blue-500" />, 
-        category: 'AI Models', 
-        description: 'Premium image generation model',
-        defaultData: { title: 'FLUX 2 Pro', type: 'image' }
-      },
-      { 
-        id: 'sora-2', 
-        type: 'gemini-3.1-pro', 
-        name: 'Sora 2', 
-        icon: <Film className="w-6 h-6 text-purple-500" />, 
-        category: 'AI Models', 
-        description: 'Advanced video generation model',
-        defaultData: { title: 'Sora 2', type: 'video' }
-      },
+    'Recent': [
+      { id: 'flux-2-pro', type: 'gemini-3.1-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'Recent', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
     ],
-    'Image Tools': [
-      { id: 'crop-image', type: 'crop-image', name: 'Crop Image', icon: <Scissors className="w-6 h-6 text-orange-500" />, category: 'Image Tools', description: 'Transform and crop images' },
+    'Image': [
+      { id: 'crop-image', type: 'crop-image', name: 'Crop Image', icon: <Scissors className="w-6 h-6 text-orange-500" />, category: 'Image', description: 'Transform and crop images' },
     ],
-    'Essentials': [
-       { id: 'request-inputs', type: 'request-inputs', name: 'Request Inputs', icon: <Plus className="w-6 h-6 text-zinc-500" />, category: 'Essentials', description: 'User input fields' },
-       { id: 'response', type: 'response', name: 'Response', icon: <Sparkles className="w-6 h-6 text-green-500" />, category: 'Essentials', description: 'Final output container' },
+    'Video': [
+      { id: 'sora-2', type: 'gemini-3.1-pro', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'Video', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
+    ],
+    'Audio': [],
+    'Others': [
+       { id: 'request-inputs', type: 'request-inputs', name: 'Request Inputs', icon: <Plus className="w-6 h-6 text-zinc-500" />, category: 'Others', description: 'User input fields' },
+       { id: 'response', type: 'response', name: 'Response', icon: <Sparkles className="w-6 h-6 text-green-500" />, category: 'Others', description: 'Final output container' },
     ]
   }
 
@@ -82,10 +69,10 @@ const NodePicker = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         />
       )}
       <div className={cn(
-        "fixed bottom-24 right-8 z-[70] transition-all duration-500",
+        "fixed bottom-32 left-1/2 -translate-x-1/2 z-[70] transition-all duration-500",
         isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-10 pointer-events-none'
       )}>
-        <div className="bg-white border border-[#f1f3f5] shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] rounded-[32px] p-2 w-[400px] max-h-[600px] overflow-hidden flex flex-col">
+        <div className="bg-white border border-[#f1f3f5] shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] rounded-[32px] p-2 w-[450px] max-h-[600px] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="p-6 pb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-[#1a1c21]">Add Node</h2>
