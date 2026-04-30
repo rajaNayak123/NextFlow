@@ -9,10 +9,10 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   const updateNode = useWorkflowStore((state) => state.updateNode)
   const fields = data.fields || []
 
-  const addField = (type: 'text' | 'image' = 'text') => {
+  const addField = (type: 'text_field' | 'image_field' = 'text_field') => {
     const newField = {
       id: `field-${Date.now()}`,
-      name: type === 'text' ? 'New prompt' : 'New image',
+      name: type === 'text_field' ? 'New prompt' : 'New image',
       value: '',
       type: type
     }
@@ -20,8 +20,6 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   }
 
   const handleFileChange = (fieldId: string, file: File) => {
-    // In a real app, this would upload to Transloadit/S3
-    // Here we'll create a local preview URL to simulate it
     const previewUrl = URL.createObjectURL(file)
     const newFields = fields.map((f: any) => 
       f.id === fieldId ? { ...f, value: file.name, previewUrl } : f
@@ -29,10 +27,15 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
     updateNode(id, { fields: newFields })
   }
 
+  const status = useWorkflowStore((state) => state.status)
+  const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
+  const isRunning = status === 'running' || nodeStatus === 'running'
+
   return (
     <div className={cn(
       "w-[380px] bg-white rounded-[24px] overflow-hidden transition-all duration-300",
-      selected && "ring-2 ring-[#5e5ce6] shadow-2xl"
+      selected && "ring-2 ring-[#5e5ce6] shadow-2xl",
+      isRunning && "running-node-pulse"
     )}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[#f1f3f5]">
@@ -42,14 +45,14 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => addField('text')}
+            onClick={() => addField('text_field')}
             title="Add text input"
             className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors"
           >
             <Type className="w-5 h-5 text-zinc-600" />
           </button>
           <button 
-            onClick={() => addField('image')}
+            onClick={() => addField('image_field')}
             title="Add image input"
             className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors"
           >
@@ -81,7 +84,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                       updateNode(id, { fields: newFields })
                     }}
                   />
-                  {field.type === 'image' ? <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> : <Type className="w-3.5 h-3.5 text-zinc-300" />}
+                  {field.type === 'image_field' ? <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> : <Type className="w-3.5 h-3.5 text-zinc-300" />}
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 transition-colors">
@@ -97,7 +100,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
               </div>
               
               <div className="relative">
-                {field.type === 'text' ? (
+                {field.type === 'text_field' ? (
                   <textarea
                     className="w-full bg-[#f8f9fa] border-none rounded-2xl px-5 py-4 text-base text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-[#5e5ce6]/10 transition-all resize-none min-h-[120px]"
                     placeholder="Enter text..."
@@ -146,7 +149,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                   id={`${field.id}-output`}
                   className={cn(
                     "!w-4 !h-4 !border-white !border-[3px] !shadow-md !static !absolute !-right-[34px] !top-1/2 !-translate-y-1/2",
-                    field.type === 'image' ? "!bg-blue-500" : "!bg-[#ff9500]"
+                    field.type === 'image_field' ? "!bg-blue-500" : "!bg-[#ff9500]"
                   )}
                   style={{ top: '50%' }}
                 />
