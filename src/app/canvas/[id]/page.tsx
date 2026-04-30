@@ -2,13 +2,16 @@
 import { useCallback, useRef, useState } from 'react'
 import ReactFlow, {
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   useReactFlow,
   NodeTypes,
   applyNodeChanges,
   applyEdgeChanges,
+  Connection,
 } from 'reactflow'
+import AnimatedEdge from '@/components/canvas/AnimatedEdge'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import 'reactflow/dist/style.css'
 import RequestInputsNode from '@/components/nodes/RequestInputsNode'
@@ -37,6 +40,10 @@ const nodeTypes: NodeTypes = {
   'response': ResponseNode,
 }
 
+const edgeTypes = {
+  animated: AnimatedEdge
+}
+
 export default function CanvasPage() {
   const { user } = useUser()
   const router = useRouter()
@@ -53,7 +60,12 @@ export default function CanvasPage() {
     execute,
     loadWorkflow,
     saveWorkflow,
-    setSelectedNodes 
+    setSelectedNodes,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
+    saveHistory
   } = useWorkflowStore()
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
@@ -67,23 +79,38 @@ export default function CanvasPage() {
   }, [workflowId, loadWorkflow])
 
   const onConnect = useCallback(
-    (params: any) => {
-      // Type-safe connections only
-      const validConnections = [
-        'request-inputs', 'crop-image', 'gemini-3.1-pro'
-      ].some(sourceType => 
-        nodes.find((n: any) => n.id === params.source)?.type === sourceType
-      )
-      
-      if (validConnections) {
-        setEdges((eds: any[]) => [...eds, params])
-      }
+    (params: Connection) => {
+      saveHistory()
+      setEdges((eds: any[]) => [...eds, { ...params, type: 'animated' }])
     },
-    [setEdges, nodes]
+    [setEdges, saveHistory]
   )
+
+  const isValidConnection = useCallback((connection: Connection) => {
+    const sourceNode = nodes.find((n: any) => n.id === connection.source)
+    const targetNode = nodes.find((n: any) => n.id === connection.target)
+    if (!sourceNode || !targetNode) return false
+
+    const imageOutputs = ['crop-image']
+    const textOutputs = ['request-inputs', 'gemini-3.1-pro']
+    const textInputs = ['response']
+    const imageInputs = ['crop-image']
+
+    // Visually reject image -> text mismatch
+    if (imageOutputs.includes(sourceNode.type) && textInputs.includes(targetNode.type)) return false;
+    if (textOutputs.includes(sourceNode.type) && imageInputs.includes(targetNode.type)) return false;
+
+    return true
+  }, [nodes])
 
   const onNodesChange = useCallback(
     (changes: any[]) => {
+      const isSignificant = changes.some(c => 
+        c.type !== 'position' || (c.type === 'position' && !c.dragging)
+      )
+      if (isSignificant) {
+        saveHistory()
+      }
       setNodes((nds: any[]) => {
         // Prevent deleting fixed nodes
         const safeChanges = changes.filter(c => {
@@ -96,14 +123,17 @@ export default function CanvasPage() {
         return applyNodeChanges(safeChanges, nds) as any[]
       })
     },
-    [setNodes]
+    [setNodes, saveHistory]
   )
 
   const onEdgesChange = useCallback(
     (changes: any[]) => {
+      if (changes.some(c => c.type === 'remove' || c.type === 'add')) {
+        saveHistory()
+      }
       setEdges((eds: any[]) => applyEdgeChanges(changes, eds) as any[])
     },
-    [setEdges]
+    [setEdges, saveHistory]
   )
 
   const onSelectionChange = useCallback(({ nodes: selected }: any) => {
@@ -112,6 +142,7 @@ export default function CanvasPage() {
 
   const onKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === 'Delete') {
+      saveHistory()
       // Delete selected (except fixed nodes)
       setNodes((nds: any[]) => 
         nds.filter(n => 
@@ -119,7 +150,7 @@ export default function CanvasPage() {
         )
       )
     }
-  }, [setNodes, selectedNodes])
+  }, [setNodes, selectedNodes, saveHistory])
 
   const saveAndFit = () => {
     saveWorkflow()
@@ -150,6 +181,20 @@ export default function CanvasPage() {
             {status}
           </div>
           <div className="h-8 w-[1px] bg-zinc-100" />
+          <button 
+            className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all disabled:opacity-50" 
+            onClick={undo}
+            disabled={undoStack.length === 0}
+          >
+            <Undo className="w-5 h-5 text-zinc-400" />
+          </button>
+          <button 
+            className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all disabled:opacity-50" 
+            onClick={redo}
+            disabled={redoStack.length === 0}
+          >
+            <Redo className="w-5 h-5 text-zinc-400" />
+          </button>
           <button className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-2xl transition-all" onClick={saveAndFit}>
             <Maximize2 className="w-5 h-5 text-zinc-400" />
           </button>
@@ -171,9 +216,12 @@ export default function CanvasPage() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           onInit={setRfInstance}
           onSelectionChange={onSelectionChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={{ type: 'animated' }}
           fitView
           minZoom={0.1}
           maxZoom={2}
@@ -181,7 +229,7 @@ export default function CanvasPage() {
           className="bg-galaxy-bg"
         >
           <Background 
-            variant="dots" 
+            variant={BackgroundVariant.Dots} 
             gap={20} 
             size={1}
             className="grid-dot"
