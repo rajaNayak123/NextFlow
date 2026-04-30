@@ -23,6 +23,7 @@
     "react-hot-toast": "^2.6.0",
     "react-resizable-panels": "^4.10.0",
     "reactflow": "^11.11.4",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.5.0",
     "transloadit": "^4.10.0",
     "trigger.dev": "^4.4.4",
