@@ -7,7 +7,7 @@ export default function ConsoleLogger() {
   
   useEffect(() => {
     console.log('nextflow Candidate Linkedin: https://www.linkedin.com/in/rajanayak/')
-  }, [pathname])
+  }, [])
   
   return null
 }
