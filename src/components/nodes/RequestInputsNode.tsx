@@ -45,7 +45,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
           </div>
         ) : (
           fields.map((field: any) => (
-            <div key={field.id} className="space-y-3 group">
+            <div key={field.id} className="space-y-3 group relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 flex items-center justify-center bg-zinc-100 rounded-lg">
@@ -162,7 +162,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                   "!w-3 !h-3 !border-2",
                   field.type === 'image' ? "!bg-orange-500 !border-white" : "!bg-white !border-orange-400"
                 )}
-                style={{ top: 'auto', bottom: 'auto' }}
+                style={{ top: '50%', transform: 'translateY(-50%)' }}
               />
             </div>
           ))
