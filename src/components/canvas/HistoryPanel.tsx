@@ -57,42 +57,59 @@ const HistoryPanel = () => {
             </button>
             
             {expanded === run.id && (
-              <div className="mt-3 p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+              <div className="mt-3 p-4 bg-white/5 rounded-2xl border border-white/10 space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="space-y-1">
                     <span className="text-zinc-400">Status</span>
-                    <span className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium",
+                    <div className={cn(
+                      "px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest w-fit",
                       run.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
                       run.status === 'failed' ? 'bg-red-500/20 text-red-400' :
                       run.status === 'partial' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-blue-500/20 text-blue-400'
                     )}>
                       {run.status}
-                    </span>
+                    </div>
                   </div>
                   {run.duration && (
                     <div className="space-y-1">
-                      <span className="text-zinc-400">Duration</span>
-                      <span className="font-mono">{run.duration.toFixed(1)}s</span>
+                      <span className="text-zinc-400">Total Time</span>
+                      <span className="font-mono block text-white">{run.duration.toFixed(1)}s</span>
                     </div>
                   )}
                 </div>
                 {run.nodes && run.nodes.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-white/10">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Node Details</div>
-                    <div className="space-y-1">
+                  <div className="space-y-3 pt-4 border-t border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Node Execution Timeline</div>
+                    <div className="space-y-3">
                       {run.nodes.map((node: any) => (
-                        <div key={node.id} className="flex items-center justify-between text-xs py-1">
-                          <span className="text-zinc-400 truncate max-w-[120px]">{node.id}</span>
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded-md font-bold uppercase text-[9px]",
-                            node.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
-                            node.status === 'failed' ? 'bg-red-500/10 text-red-400' :
-                            'bg-zinc-500/10 text-zinc-400'
-                          )}>
-                            {node.status}
-                          </span>
+                        <div key={node.id} className="p-3 bg-black/20 rounded-xl space-y-2 border border-white/5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white truncate max-w-[150px]">{node.id.replace(/-\d+$/, '').replace(/-/g, ' ')}</span>
+                            <span className={cn(
+                              "text-[9px] font-black uppercase px-1.5 py-0.5 rounded",
+                              node.status === 'completed' ? 'text-emerald-400 bg-emerald-400/10' :
+                              node.status === 'failed' ? 'text-red-400 bg-red-400/10' : 'text-zinc-500'
+                            )}>{node.status}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                             <span>Execution Time:</span>
+                             <span className="font-mono text-zinc-300">{(node.duration / 1000).toFixed(2)}s</span>
+                          </div>
+                          {(node.inputs || node.output) && (
+                            <div className="pt-2 space-y-1">
+                               {node.inputs && (
+                                 <div className="text-[9px] text-zinc-500 truncate">
+                                   <span className="font-bold">IN:</span> {JSON.stringify(node.inputs)}
+                                 </div>
+                               )}
+                               {node.output && (
+                                 <div className="text-[9px] text-zinc-400 truncate">
+                                   <span className="font-bold">OUT:</span> {JSON.stringify(node.output)}
+                                 </div>
+                               )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
