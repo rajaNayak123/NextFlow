@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       },
       params: {
         steps: {
-          imported: {
+          resize: {
             use: ":original",
             robot: "/image/resize",
             width: 800,
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Return the resulting URL from transloadit
-    const resultUrl = assembly.results.imported[0].ssl_url
+    const resultUrl = assembly.results.resize[0].ssl_url
 
     return NextResponse.json({ url: resultUrl })
   } catch (error: any) {
