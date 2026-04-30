@@ -1,40 +1,39 @@
 import { tasks } from "@trigger.dev/sdk/v3"
 
-// Topological sort for DAG execution
-export function topologicalSort(nodes: any[], edges: any[]) {
-    const graph: Record<string, string[]> = {}
-    const inDegree: Record<string, number> = {}
-    
-    nodes.forEach(node => {
-      graph[node.id] = []
-      inDegree[node.id] = 0
-    })
+function getExecutionLevels(nodes: any[], edges: any[]): string[][] {
+  const inDegree: Record<string, number> = {}
+  const graph: Record<string, string[]> = {}
   
-    edges.forEach(edge => {
-      if (graph[edge.source] && graph[edge.target]) {
-        graph[edge.source].push(edge.target)
-        inDegree[edge.target]++
-      }
-    })
-  
-    const queue = Object.keys(inDegree).filter(node => inDegree[node] === 0)
-    const result: string[] = []
-  
-    while (queue.length) {
-      const node = queue.shift()!
-      result.push(node)
-      
-      graph[node].forEach(neighbor => {
+  nodes.forEach(n => {
+    inDegree[n.id] = 0
+    graph[n.id] = []
+  })
+  edges.forEach(e => {
+    if (graph[e.source] && inDegree[e.target] !== undefined) {
+      graph[e.source].push(e.target)
+      inDegree[e.target]++
+    }
+  })
+
+  let queue = Object.keys(inDegree).filter(n => inDegree[n] === 0)
+  const levels: string[][] = []
+
+  while (queue.length > 0) {
+    levels.push(queue)
+    const nextQueue: string[] = []
+    for (const node of queue) {
+      for (const neighbor of graph[node]) {
         inDegree[neighbor]--
         if (inDegree[neighbor] === 0) {
-          queue.push(neighbor)
+          nextQueue.push(neighbor)
         }
-      })
+      }
     }
-  
-    return result.length === nodes.length ? result : null // Detect cycles
+    queue = nextQueue
+  }
+  return levels
 }
-  
+
 // Workflow execution engine
 export async function executeWorkflow(
   nodes: any[],
@@ -42,29 +41,30 @@ export async function executeWorkflow(
   type: string,
   selectedNodes: string[]
 ) {
-  const execOrder = topologicalSort(nodes, edges)
-  if (!execOrder) throw new Error("Cycle detected")
+  const levels = getExecutionLevels(nodes, edges)
+  const totalInLevels = levels.reduce((acc, lvl) => acc + lvl.length, 0)
+  if (totalInLevels !== nodes.length) throw new Error("Cycle detected")
 
   const results: Record<string, any> = {}
   
-  // We execute nodes in order of topological sort
-  // For a real parallel engine, we would group by depth, but this works for a clone
-  for (const nodeId of execOrder) {
-    const node = nodes.find(n => n.id === nodeId)
-    if (!node) continue
-    
-    // If partial run, only run selected nodes
-    if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(nodeId)) {
-      continue
-    }
+  for (const level of levels) {
+    await Promise.all(level.map(async (nodeId) => {
+      const node = nodes.find(n => n.id === nodeId)
+      if (!node) return
+      
+      // If partial run, only run selected nodes
+      if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(nodeId)) {
+        return
+      }
 
-    if (node.type === 'request-inputs' || node.type === 'response') {
-      results[nodeId] = { status: 'completed', output: node.data }
-      continue
-    }
+      if (node.type === 'request-inputs' || node.type === 'response') {
+        results[nodeId] = { status: 'completed', output: node.data }
+        return
+      }
 
-    const inputs = resolveInputs(nodeId, nodes, edges, results)
-    results[nodeId] = await executeNode(node, inputs)
+      const inputs = resolveInputs(nodeId, nodes, edges, results)
+      results[nodeId] = await executeNode(node, inputs)
+    }))
   }
 
   return results
