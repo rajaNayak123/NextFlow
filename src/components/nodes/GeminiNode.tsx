@@ -1,16 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Info, Play, ChevronDown, Plus, RotateCcw, MoreHorizontal, Maximize2, Settings2, Sparkles, ChevronRight, Upload, Link2 } from 'lucide-react'
+import { Info, Play, ChevronDown, Plus, RotateCcw, MoreHorizontal, Maximize2, Settings2, Sparkles, ChevronRight, Upload, Link2, Mic2, Loader2 } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
 
 const GeminiNode = ({ id, selected, data }: NodeProps) => {
-  const [activeTab, setActiveTab] = useState(data.type === 'video' ? 'image-to-video' : 'text-to-image')
   const updateNode = useWorkflowStore((state) => state.updateNode)
   const status = useWorkflowStore((state) => state.status)
   const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
   const execute = useWorkflowStore((state) => state.execute)
+
+  const edges = useWorkflowStore((state) => state.edges)
+  const isHandleConnected = (handleId: string) => edges.some(e => e.target === id && e.targetHandle === handleId)
 
   const [prompt, setPrompt] = useState(data.prompt || '')
   const [imageSize, setImageSize] = useState(data.imageSize || '4:3')
@@ -18,215 +20,157 @@ const GeminiNode = ({ id, selected, data }: NodeProps) => {
   const [aspectRatio, setAspectRatio] = useState(data.aspectRatio || '16:9')
   const [duration, setDuration] = useState(data.duration || '8')
   const [resolution, setResolution] = useState(data.resolution || '720p')
+  const [audioUrl, setAudioUrl] = useState(data.audioUrl || '')
 
   useEffect(() => {
-    updateNode(id, { prompt, imageSize, numImages, aspectRatio, duration, resolution })
-  }, [prompt, imageSize, numImages, aspectRatio, duration, resolution])
+    updateNode(id, { prompt, imageSize, numImages, aspectRatio, duration, resolution, audioUrl })
+  }, [prompt, imageSize, numImages, aspectRatio, duration, resolution, audioUrl])
 
   const isRunning = status === 'running' || nodeStatus === 'running'
   const isVideo = data.type === 'video' || id.toLowerCase().includes('sora')
-  const title = data.title || (isVideo ? 'Sora 2' : 'FLUX 2 Pro')
+  const title = data.title || (isVideo ? 'Sora 2' : 'Gemini 3.1 Pro')
 
   return (
     <div className={cn(
-      "w-[420px] bg-white rounded-[24px] overflow-hidden transition-all duration-500",
+      "w-[450px] bg-white rounded-[32px] overflow-hidden transition-all duration-500",
       selected && "ring-2 ring-[#5e5ce6] shadow-2xl",
       isRunning && "running-node-pulse"
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-[#f1f3f5]">
+      <div className="flex items-center justify-between px-8 py-6 border-b border-[#f1f3f5]">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-[#1a1c21]">{title}</span>
-          <div className="flex items-center gap-2 ml-4">
-            <Info className="w-4 h-4 text-zinc-300" />
-            <RotateCcw className="w-4 h-4 text-zinc-300 cursor-pointer" />
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+             <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <span className="block text-lg font-black text-[#1a1c21] tracking-tight">{title}</span>
+            <span className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">Multimodal Model</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => execute('single', id)}
-            className="flex items-center gap-2 bg-[#dcfce7] text-[#16a34a] px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-[#bbf7d0] transition-all"
+            disabled={isRunning}
+            className="flex items-center gap-2 bg-[#dcfce7] text-[#16a34a] px-5 py-2.5 rounded-2xl text-[14px] font-black hover:bg-[#bbf7d0] transition-all active:scale-95 disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-current" />
             Run
           </button>
-          <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-            <MoreHorizontal className="w-5 h-5 text-zinc-400" />
-          </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-6 pt-6">
-        <div className="flex p-1 bg-[#f8f9fa] rounded-2xl">
-          <button 
-            onClick={() => setActiveTab(isVideo ? 'text-to-video' : 'text-to-image')}
-            className={cn(
-              "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
-              activeTab === (isVideo ? 'text-to-video' : 'text-to-image') ? "bg-[#1a1c21] text-white shadow-lg" : "text-zinc-400"
-            )}
-          >
-            {isVideo ? 'Text to Video' : 'Text to Image'}
-          </button>
-          <button 
-            onClick={() => setActiveTab(isVideo ? 'image-to-video' : 'image-to-image')}
-            className={cn(
-              "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
-              activeTab === (isVideo ? 'image-to-video' : 'image-to-image') ? "bg-[#1a1c21] text-white shadow-lg" : "text-zinc-400"
-            )}
-          >
-             {isVideo ? 'Image to Video' : 'Image to Image'}
-          </button>
-        </div>
-      </div>
-
-      {/* Inputs */}
-      <div className="p-6 space-y-5">
-        {activeTab.includes('image-to') && (
-          <div className="space-y-3 relative">
-            <div className="flex items-center gap-2">
-               <span className="text-sm font-bold text-zinc-500">Start Frame</span>
-               <span className="text-red-500">*</span>
+      {/* Multimodal Inputs */}
+      <div className="p-8 space-y-8">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2 relative">
+            <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Image Input</label>
+            <div className={cn(
+              "w-full h-12 bg-[#f8f9fa] rounded-2xl flex items-center justify-center border-2 border-dashed border-zinc-100 group transition-all cursor-pointer",
+              isHandleConnected('startFrame') ? "opacity-50 grayscale cursor-not-allowed border-blue-500" : "hover:border-blue-200"
+            )}>
+               <Upload className={cn("w-4 h-4 text-zinc-300 transition-colors", !isHandleConnected('startFrame') && "group-hover:text-blue-500")} />
             </div>
-            <div className="w-full bg-[#f8f9fa] border-none rounded-2xl px-6 py-6 flex items-center justify-center gap-2 text-zinc-400 border-2 border-dashed border-zinc-100">
-               <Upload className="w-4 h-4" />
-               <span className="text-sm font-medium">Upload image</span>
-            </div>
-            <Handle type="target" position={Position.Left} id="startFrame" className="!w-4 !h-4 !bg-[#007aff] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-[55px]" />
+            <Handle type="target" position={Position.Left} id="startFrame" className="!w-4 !h-4 !bg-blue-500 !border-white !border-[3px] !shadow-lg !absolute !-left-[42px] !top-10" />
           </div>
-        )}
+          <div className="space-y-2 relative">
+            <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Audio Input</label>
+            <div className={cn(
+              "w-full h-12 bg-[#f8f9fa] rounded-2xl flex items-center justify-center border-2 border-dashed border-zinc-100 group transition-all cursor-pointer",
+              isHandleConnected('audio') ? "opacity-50 grayscale cursor-not-allowed border-purple-500" : "hover:border-purple-200"
+            )}>
+               <Mic2 className={cn("w-4 h-4 text-zinc-300 transition-colors", !isHandleConnected('audio') && "group-hover:text-purple-500")} />
+            </div>
+            <Handle type="target" position={Position.Left} id="audio" className="!w-4 !h-4 !bg-purple-500 !border-white !border-[3px] !shadow-lg !absolute !-left-[42px] !top-10" />
+          </div>
+        </div>
 
         <div className="space-y-3 relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-zinc-500">Prompt</span>
-              <span className="text-red-500">*</span>
-            </div>
-            <button className="w-8 h-8 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-lg transition-colors">
-              <Plus className="w-4 h-4 text-zinc-400" />
-            </button>
-          </div>
+          <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Prompt</label>
           <div className="relative">
             <textarea 
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={isVideo ? "make car racing" : "Describe the image you want to create..."}
-              className="w-full bg-[#f8f9fa] border-none rounded-2xl px-6 py-5 text-base text-[#1a1c21] placeholder:text-zinc-300 focus:ring-2 focus:ring-[#5e5ce6]/10 min-h-[140px] resize-none"
+              disabled={isHandleConnected('prompt')}
+              placeholder={isHandleConnected('prompt') ? "Input connected from another node..." : "Describe what you want the AI to do..."}
+              className={cn(
+                "w-full bg-[#f8f9fa] border-none rounded-[24px] px-6 py-5 text-base text-[#1a1c21] placeholder:text-zinc-300 focus:ring-2 focus:ring-[#5e5ce6]/10 min-h-[160px] resize-none font-medium leading-relaxed transition-all",
+                isHandleConnected('prompt') && "opacity-50 cursor-not-allowed bg-zinc-50"
+              )}
             />
-            <Maximize2 className="absolute bottom-5 right-5 w-4 h-4 text-zinc-300" />
+            <Handle type="target" position={Position.Left} id="prompt" className="!w-4 !h-4 !bg-orange-500 !border-white !border-[3px] !shadow-lg !absolute !-left-[42px] !top-12" />
           </div>
-          <Handle type="target" position={Position.Left} id="prompt" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-[60px]" />
         </div>
 
-        {isVideo ? (
-          <>
-            <div className="flex items-center justify-between relative">
-              <span className="text-sm font-bold text-zinc-500">Aspect Ratio</span>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
-                  <span className="text-sm font-bold text-[#1a1c21]">{aspectRatio}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-                  <Plus className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-              <Handle type="target" position={Position.Left} id="aspectRatio" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
-            </div>
-
-            <div className="flex items-center justify-between relative">
-              <span className="text-sm font-bold text-zinc-500">Duration</span>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
-                  <span className="text-sm font-bold text-[#1a1c21]">{duration}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-                  <Plus className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-              <Handle type="target" position={Position.Left} id="duration" className="!w-4 !h-4 !bg-[#ff2d55] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
-            </div>
-
-            <div className="flex items-center justify-between relative">
-              <span className="text-sm font-bold text-zinc-500">Resolution</span>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
-                  <span className="text-sm font-bold text-[#1a1c21]">{resolution}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-                  <Plus className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-              <Handle type="target" position={Position.Left} id="resolution" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between relative">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-zinc-500">Number of Images</span>
-                <Info className="w-3.5 h-3.5 text-zinc-300" />
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
-                  <span className="text-sm font-bold text-[#1a1c21]">{numImages}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-                  <Plus className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-              <Handle type="target" position={Position.Left} id="numImages" className="!w-4 !h-4 !bg-[#ff2d55] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
-            </div>
-
-            <div className="flex items-center justify-between relative">
-              <span className="text-sm font-bold text-zinc-500">Image Size</span>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-between gap-4 bg-[#f8f9fa] rounded-xl px-4 py-2.5 border border-transparent min-w-[140px]">
-                  <span className="text-sm font-bold text-[#1a1c21]">{imageSize}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center bg-[#f8f9fa] hover:bg-[#f1f3f5] rounded-xl transition-colors">
-                  <Plus className="w-4 h-4 text-zinc-400" />
-                </button>
-              </div>
-              <Handle type="target" position={Position.Left} id="imageSize" className="!w-4 !h-4 !bg-[#ff9500] !border-white !border-[3px] !shadow-sm !absolute !-left-[34px] !top-1/2 !-translate-y-1/2" />
-            </div>
-          </>
-        )}
-
-        <div className="flex items-center gap-2 cursor-pointer group pt-2">
-          <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 transition-transform" />
-          <span className="text-sm font-bold text-zinc-400 group-hover:text-zinc-600">Settings</span>
+        {/* Dynamic Controls */}
+        <div className="space-y-4">
+           {isVideo ? (
+             <div className="grid grid-cols-2 gap-4">
+                <div className={cn("space-y-2 relative transition-all", isHandleConnected('resolution') && "opacity-50")}>
+                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Resolution</label>
+                  <div className="bg-[#f8f9fa] rounded-xl px-4 py-3 font-bold text-sm text-zinc-700">{resolution}</div>
+                  <Handle type="target" position={Position.Left} id="resolution" className="!w-4 !h-4 !bg-pink-500 !border-white !border-[3px] !shadow-md !absolute !-left-[42px] !top-10" />
+                </div>
+                <div className={cn("space-y-2 relative transition-all", isHandleConnected('duration') && "opacity-50")}>
+                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Duration</label>
+                  <div className="bg-[#f8f9fa] rounded-xl px-4 py-3 font-bold text-sm text-zinc-700">{duration}s</div>
+                  <Handle type="target" position={Position.Left} id="duration" className="!w-4 !h-4 !bg-red-500 !border-white !border-[3px] !shadow-md !absolute !-left-[42px] !top-10" />
+                </div>
+             </div>
+           ) : (
+             <div className="grid grid-cols-2 gap-4">
+                <div className={cn("space-y-2 relative transition-all", isHandleConnected('aspectRatio') && "opacity-50")}>
+                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Aspect Ratio</label>
+                  <div className="bg-[#f8f9fa] rounded-xl px-4 py-3 font-bold text-sm text-zinc-700">{aspectRatio}</div>
+                  <Handle type="target" position={Position.Left} id="aspectRatio" className="!w-4 !h-4 !bg-yellow-500 !border-white !border-[3px] !shadow-md !absolute !-left-[42px] !top-10" />
+                </div>
+                <div className={cn("space-y-2 relative transition-all", isHandleConnected('imageSize') && "opacity-50")}>
+                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Output Size</label>
+                  <div className="bg-[#f8f9fa] rounded-xl px-4 py-3 font-bold text-sm text-zinc-700">{imageSize}</div>
+                  <Handle type="target" position={Position.Left} id="imageSize" className="!w-4 !h-4 !bg-emerald-500 !border-white !border-[3px] !shadow-md !absolute !-left-[42px] !top-10" />
+                </div>
+             </div>
+           )}
         </div>
 
         {/* Output Section */}
-        <div className="pt-6 border-t border-[#f1f3f5] space-y-4">
-          <span className="text-sm font-bold text-zinc-400">{isVideo ? 'Generated Video' : 'Generated Images'}</span>
-          <div className="bg-[#f8f9fa] rounded-[24px] aspect-video flex flex-col items-center justify-center gap-3 border-2 border-[#f1f3f5]">
+        <div className="pt-8 border-t border-[#f1f3f5] space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">AI Response</label>
+            {data.output && <div className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-black uppercase">Result Ready</div>}
+          </div>
+          <div className="bg-[#f8f9fa] rounded-[28px] border-2 border-[#f1f3f5] overflow-hidden">
              {data.output?.response ? (
-                <div className="w-full h-full p-2">
-                   <p className="text-sm text-zinc-700 p-4">{data.output.response}</p>
+                <div className="p-6">
+                   <p className="text-sm text-zinc-700 leading-relaxed font-medium">{data.output.response}</p>
+                </div>
+             ) : isRunning ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                   <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                   <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Generating...</p>
                 </div>
              ) : (
-                <p className="text-sm text-zinc-400 font-medium italic">No output yet</p>
+                <div className="py-12 flex flex-col items-center justify-center gap-2">
+                   <Sparkles className="w-5 h-5 text-zinc-200" />
+                   <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest">No output yet</p>
+                </div>
              )}
           </div>
         </div>
       </div>
 
-      <div className="px-6 py-4 bg-[#f8f9fa] flex items-center justify-between border-t border-[#f1f3f5]">
-         <div className="flex items-center gap-2">
-            <Link2 className="w-4 h-4 text-zinc-400" />
-            <span className="text-xs font-bold text-zinc-400">~0.03M</span>
+      {/* Footer Info */}
+      <div className="px-8 py-5 bg-[#f8f9fa] flex items-center justify-between border-t border-[#f1f3f5]">
+         <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Model: 1.5 Flash</span>
+            </div>
          </div>
-         <Info className="w-4 h-4 text-zinc-300" />
+         <Settings2 className="w-4 h-4 text-zinc-300" />
       </div>
 
       {/* Output Handle */}
-      <Handle type="source" position={Position.Right} id="response" className="!w-4 !h-4 !bg-[#007aff] !border-white !border-[3px] !shadow-sm !absolute !-right-[12px] !top-1/2 !-translate-y-1/2" />
+      <Handle type="source" position={Position.Right} id="response" className="!w-4 !h-4 !bg-[#5e5ce6] !border-white !border-[3px] !shadow-lg !absolute !-right-[12px] !top-1/2 !-translate-y-1/2" />
     </div>
   )
 }
