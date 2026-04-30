@@ -331,7 +331,7 @@ function CanvasContent() {
 
       <button
         onClick={() => setPickerOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-3xl shadow-2xl border-4 border-white/20 backdrop-blur-xl flex items-center justify-center text-2xl hover:scale-110 transition-all duration-300 hover:shadow-blue-glow z-40"
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-3xl shadow-2xl border-4 border-white/20 backdrop-blur-xl flex items-center justify-center text-2xl hover:scale-110 transition-all duration-300 hover:shadow-blue-glow z-40"
       >
         <Plus />
       </button>
