@@ -7,6 +7,8 @@ interface WorkflowState {
   edges: WorkflowEdge[]
   selectedNodes: string[]
   history: any[]
+  undoStack: { nodes: WorkflowNode[], edges: WorkflowEdge[] }[]
+  redoStack: { nodes: WorkflowNode[], edges: WorkflowEdge[] }[]
   workflowId?: string
   status: 'idle' | 'running' | 'completed' | 'failed'
   nodeStatuses: Record<string, 'idle' | 'running' | 'completed' | 'failed'>
@@ -23,6 +25,9 @@ interface WorkflowState {
   saveWorkflow: () => Promise<void>
   setHistory: (history: any[]) => void
   setStatus: (status: WorkflowState['status']) => void
+  saveHistory: () => void
+  undo: () => void
+  redo: () => void
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
@@ -45,6 +50,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   edges: [],
   selectedNodes: [],
   history: [],
+  undoStack: [],
+  redoStack: [],
   status: 'idle',
   nodeStatuses: {},
 
@@ -118,4 +125,31 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   
   setHistory: (history) => set({ history }),
   setStatus: (status) => set({ status }),
+  
+  saveHistory: () => set((state) => ({
+    undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }],
+    redoStack: []
+  })),
+
+  undo: () => set((state) => {
+    if (state.undoStack.length === 0) return state
+    const prev = state.undoStack[state.undoStack.length - 1]
+    return {
+      nodes: prev.nodes,
+      edges: prev.edges,
+      undoStack: state.undoStack.slice(0, -1),
+      redoStack: [...state.redoStack, { nodes: state.nodes, edges: state.edges }]
+    }
+  }),
+
+  redo: () => set((state) => {
+    if (state.redoStack.length === 0) return state
+    const next = state.redoStack[state.redoStack.length - 1]
+    return {
+      nodes: next.nodes,
+      edges: next.edges,
+      redoStack: state.redoStack.slice(0, -1),
+      undoStack: [...state.undoStack, { nodes: state.nodes, edges: state.edges }]
+    }
+  })
 }))
