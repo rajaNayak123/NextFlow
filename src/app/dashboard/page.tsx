@@ -146,7 +146,8 @@ export default function Dashboard() {
               <button 
                 onClick={async () => {
                   const res = await fetch(`/api/workflows/${renameModal.id}`, { 
-                    method: 'PUT', 
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: renameModal.name }) 
                   })
                   if (res.ok) {
