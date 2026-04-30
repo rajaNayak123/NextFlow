@@ -116,14 +116,25 @@ export default function CanvasPage() {
 
     if (hasCycle(connection.source!, connection.target!)) return false
 
-    const imageOutputs = ['crop-image']
-    const textOutputs = ['request-inputs', 'gemini-3.1-pro']
-    const textInputs = ['response']
-    const imageInputs = ['crop-image']
+    // Type-safe connection enforcement
+    const sourceHandleId = connection.sourceHandle || ''
+    const targetHandleId = connection.targetHandle || ''
 
-    // Visually reject image -> text mismatch
-    if (imageOutputs.includes(sourceNode.type) && textInputs.includes(targetNode.type)) return false;
-    if (textOutputs.includes(sourceNode.type) && imageInputs.includes(targetNode.type)) return false;
+    const isImageOutput = 
+      sourceNode.type === 'crop-image' || 
+      (sourceNode.type === 'request-inputs' && sourceNode.data.fields?.find((f: any) => `${f.id}-output` === sourceHandleId)?.type === 'image')
+
+    const isImageInput = 
+      targetNode.type === 'crop-image' ||
+      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'image')
+
+    // Reject image -> text mismatch and vice versa
+    if (isImageOutput && !isImageInput && targetNode.type !== 'response') {
+        // If it's an image output, it can only go to image inputs or response (which handles anything)
+        if (targetNode.type === 'gemini-3.1-pro' && ['prompt', 'systemPrompt'].includes(targetHandleId)) return false
+    }
+    
+    if (!isImageOutput && isImageInput) return false
 
     return true
   }, [nodes, edges])
@@ -166,12 +177,13 @@ export default function CanvasPage() {
   }, [setSelectedNodes])
 
   const onKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === 'Delete') {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (selectedNodes.length === 0) return
       saveHistory()
-      // Delete selected (except fixed nodes)
+      // Keep nodes that are NOT selected OR are NOT deletable
       setNodes((nds: any[]) => 
         nds.filter(n => 
-          !n.deletable === false && selectedNodes.includes(n.id)
+          !selectedNodes.includes(n.id) || n.deletable === false
         )
       )
     }
@@ -287,7 +299,7 @@ export default function CanvasPage() {
       </div>
 
       {/* Main Canvas */}
-      <div className="flex-1 relative" ref={reactFlowWrapper} tabIndex={-1} onKeyDown={onKeyDown}>
+      <div className="flex-1 relative outline-none" ref={reactFlowWrapper} tabIndex={0} onKeyDown={onKeyDown}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
