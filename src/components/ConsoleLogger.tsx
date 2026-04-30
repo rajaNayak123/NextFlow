@@ -6,7 +6,7 @@ export default function ConsoleLogger() {
   const pathname = usePathname()
   
   useEffect(() => {
-    console.log('nextflow Candidate Linkedin: <url>')
+    console.log('nextflow Candidate Linkedin: https://www.linkedin.com/in/rajanayak/')
   }, [pathname])
   
   return null
