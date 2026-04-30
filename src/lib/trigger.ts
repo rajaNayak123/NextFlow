@@ -6,3 +6,4 @@ configure({
 });
 
 export * from "@trigger.dev/sdk/v3";
+export { tasks } from "@trigger.dev/sdk/v3";
