@@ -1,6 +1,6 @@
 'use client'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Plus, Info, Copy, Trash2, Maximize2, Type } from 'lucide-react'
+import { Plus, Info, Copy, Trash2, Maximize2, Type, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
 
@@ -49,32 +49,108 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 flex items-center justify-center bg-zinc-100 rounded-lg">
-                    <Type className="w-3 h-3 text-zinc-500" />
+                    {field.type === 'image' ? <ImageIcon className="w-3 h-3 text-zinc-500" /> : <Type className="w-3 h-3 text-zinc-500" />}
                   </div>
-                  <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider truncate max-w-[120px]">
-                    {field.name}
-                  </span>
-                  <Info className="w-3 h-3 text-zinc-300" />
+                  <input
+                    type="text"
+                    className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider truncate max-w-[90px] bg-transparent border-none focus:ring-0 p-0"
+                    value={field.name}
+                    onChange={(e) => {
+                      const newFields = fields.map((f: any) => 
+                        f.id === field.id ? { ...f, name: e.target.value } : f
+                      )
+                      updateNode(id, { fields: newFields })
+                    }}
+                  />
+                  <select 
+                    value={field.type} 
+                    onChange={(e) => {
+                      const newFields = fields.map((f: any) => 
+                        f.id === field.id ? { ...f, type: e.target.value } : f
+                      )
+                      updateNode(id, { fields: newFields })
+                    }}
+                    className="text-xs bg-zinc-100 text-zinc-500 rounded px-1 py-0.5 border-none cursor-pointer outline-none"
+                  >
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                  </select>
                 </div>
                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1 hover:bg-zinc-50 rounded-md text-zinc-400"><Copy className="w-3.5 h-3.5" /></button>
-                  <button className="p-1 hover:bg-red-50 rounded-md text-zinc-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button className="p-1 hover:bg-red-50 rounded-md text-zinc-400 hover:text-red-500" onClick={() => {
+                    const newFields = fields.filter((f: any) => f.id !== field.id)
+                    updateNode(id, { fields: newFields })
+                  }}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
               
               <div className="relative">
-                <textarea
-                  className="w-full bg-[#F5F6F8] border-none rounded-2xl px-4 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none min-h-[100px]"
-                  placeholder="Enter text..."
-                  value={field.value}
-                  onChange={(e) => {
-                    const newFields = fields.map((f: any) => 
-                      f.id === field.id ? { ...f, value: e.target.value } : f
-                    )
-                    updateNode(id, { fields: newFields })
-                  }}
-                />
-                <Maximize2 className="absolute bottom-4 right-4 w-3.5 h-3.5 text-zinc-300" />
+                {field.type === 'image' ? (
+                  <div className="w-full bg-[#F5F6F8] border-2 border-dashed border-zinc-200 rounded-2xl px-4 py-4 text-center overflow-hidden relative">
+                    {field.previewUrl || field.value ? (
+                      <>
+                        <img src={field.previewUrl || field.value} className="max-h-32 mx-auto rounded-lg object-cover" />
+                        {field.uploading && (
+                          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="text-xs text-zinc-500 w-full"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          
+                          const previewUrl = URL.createObjectURL(file)
+                          let currentFields = useWorkflowStore.getState().nodes.find(n => n.id === id)?.data.fields || fields
+                          
+                          updateNode(id, { 
+                            fields: currentFields.map((f: any) => 
+                              f.id === field.id ? { ...f, previewUrl, uploading: true } : f
+                            ) 
+                          })
+
+                          const formData = new FormData()
+                          formData.append('file', file)
+                          try {
+                            const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                            const data = await res.json()
+                            
+                            currentFields = useWorkflowStore.getState().nodes.find(n => n.id === id)?.data.fields || fields
+                            updateNode(id, { 
+                              fields: currentFields.map((f: any) => 
+                                f.id === field.id ? { ...f, value: data.url, previewUrl: data.url, uploading: false } : f
+                              ) 
+                            })
+                          } catch (err) {
+                            console.error(err)
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      className="w-full bg-[#F5F6F8] border-none rounded-2xl px-4 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none min-h-[100px]"
+                      placeholder="Enter text..."
+                      value={field.value}
+                      onChange={(e) => {
+                        const newFields = fields.map((f: any) => 
+                          f.id === field.id ? { ...f, value: e.target.value } : f
+                        )
+                        updateNode(id, { fields: newFields })
+                      }}
+                    />
+                    <Maximize2 className="absolute bottom-4 right-4 w-3.5 h-3.5 text-zinc-300" />
+                  </>
+                )}
               </div>
 
               {/* Source Handles for each field */}
@@ -82,7 +158,10 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                 type="source"
                 position={Position.Right}
                 id={`${field.id}-output`}
-                className="!w-3 !h-3 !bg-white !border-2 !border-orange-400"
+                className={cn(
+                  "!w-3 !h-3 !border-2",
+                  field.type === 'image' ? "!bg-orange-500 !border-white" : "!bg-white !border-orange-400"
+                )}
                 style={{ top: 'auto', bottom: 'auto' }}
               />
             </div>
