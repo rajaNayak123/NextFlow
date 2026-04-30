@@ -6,7 +6,11 @@ export const transloadit = new Transloadit({
 })
 
 export async function uploadImage(file: File): Promise<string> {
+  const bytes = await file.arrayBuffer()
+  const buffer = Buffer.from(bytes)
+
   const assembly = await transloadit.createAssembly({
+    uploads: { "my_file": buffer },
     params: {
       auth: { key: process.env.TRANSLOADIT_AUTH_KEY! },
       steps: {
@@ -21,9 +25,8 @@ export async function uploadImage(file: File): Promise<string> {
         },
       },
     },
-    files: { "my_file": file },
+    waitForCompletion: true,
   })
 
-  await assembly.await()
   return assembly.results.exported[0].ssl_url
 }
