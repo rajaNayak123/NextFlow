@@ -45,6 +45,7 @@ const NodePicker = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       type: node.type,
       data: node.defaultData || (node.type === 'crop-image' ? { x: 0, y: 0, w: 100, h: 100 } : { fields: [] }),
       position: { x, y },
+      deletable: node.type !== 'request-inputs' && node.type !== 'response'
     })
     onClose()
   }
