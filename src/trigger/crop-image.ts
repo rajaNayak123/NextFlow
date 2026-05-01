@@ -34,8 +34,8 @@ export const cropImage = schemaTask({
       .extract({ left: pixelX, top: pixelY, width: pixelWidth, height: pixelHeight })
       .toBuffer()
 
-    // Artificial 30+ second delay (MANDATORY)
-    await wait.for({ seconds: 35 })
+    // Artificial 30-second delay (MANDATORY)
+    await new Promise((resolve) => setTimeout(resolve, 30000));
 
     // 4. Return data URL (Real processed image)
     const base64 = croppedBuffer.toString('base64')
