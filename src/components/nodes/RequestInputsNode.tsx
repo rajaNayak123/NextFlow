@@ -3,6 +3,7 @@ import { Handle, Position, NodeProps } from 'reactflow'
 import { Plus, Info, Copy, Trash2, Maximize2, GripVertical, Type, Image as ImageIcon, Loader2, MoreVertical, RotateCcw, Hash, CheckSquare, Music, Video, FileText, X } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
+import { uploadImage } from '@/lib/transloadit'
 
 const inputTypes = [
   { id: 'text', name: 'Text', icon: Type, color: 'text-blue-500' },
@@ -18,6 +19,7 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   const updateNode = useWorkflowStore((state) => state.updateNode)
   const fields = data.fields || []
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({})
 
   const addField = (typeId: string) => {
     const type = inputTypes.find(t => t.id === typeId)
@@ -29,6 +31,22 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
     }
     updateNode(id, { fields: [...fields, newField] })
     setIsDropdownOpen(false)
+  }
+
+  const handleFileUpload = async (fieldId: string, file: File) => {
+    setUploadingFields(prev => ({ ...prev, [fieldId]: true }))
+    try {
+      const url = await uploadImage(file)
+      const newFields = fields.map((f: any) => 
+        f.id === fieldId ? { ...f, value: url } : f
+      )
+      updateNode(id, { fields: newFields })
+    } catch (error) {
+      console.error("Upload failed:", error)
+      alert("Failed to upload image to Transloadit")
+    } finally {
+      setUploadingFields(prev => ({ ...prev, [fieldId]: false }))
+    }
   }
 
   const status = useWorkflowStore((state) => state.status)
@@ -150,28 +168,26 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
                       ) : (
                         <div 
                           onClick={() => {
+                             if (uploadingFields[field.id]) return
                              const input = document.createElement('input')
                              input.type = 'file'
                              input.accept = 'image/png, image/jpeg, image/jpg, image/webp, image/gif'
                              input.onchange = (e: any) => {
                                const file = e.target.files[0]
-                               if (file) {
-                                 const reader = new FileReader()
-                                 reader.onload = (re) => {
-                                   const newFields = fields.map((f: any) => 
-                                     f.id === field.id ? { ...f, value: re.target?.result } : f
-                                   )
-                                   updateNode(id, { fields: newFields })
-                                 }
-                                 reader.readAsDataURL(file)
-                               }
+                               if (file) handleFileUpload(field.id, file)
                              }
                              input.click()
                           }}
                           className="w-full bg-[#F3F4F6] border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center gap-2 hover:bg-slate-100/50 transition-all cursor-pointer"
                         >
-                           <Icon className="w-6 h-6 text-slate-300" />
-                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Upload Image (JPG, PNG, GIF)</span>
+                           {uploadingFields[field.id] ? (
+                             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                           ) : (
+                             <Icon className="w-6 h-6 text-slate-300" />
+                           )}
+                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                             {uploadingFields[field.id] ? "Uploading to CDN..." : "Upload Image (JPG, PNG, GIF)"}
+                           </span>
                         </div>
                       )}
                     </div>

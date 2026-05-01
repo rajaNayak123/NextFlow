@@ -1,18 +1,12 @@
-import { schemaTask, wait } from "@trigger.dev/sdk/v3"
+import { task, wait } from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 import sharp from "sharp"
 
-export const cropImage = schemaTask({
+export const cropImage = task({
   id: "crop-image",
-  schema: z.object({
-    imageUrl: z.string().url(),
-    x: z.number().min(0).max(100).default(0),
-    y: z.number().min(0).max(100).default(0),
-    width: z.number().min(1).max(100).default(100),
-    height: z.number().min(1).max(100).default(100),
-  }),
-  run: async (payload) => {
-    const { imageUrl, x, y, width, height } = payload
+  run: async (payload: any) => {
+    // Validate payload manually or via task schema if available
+    const { imageUrl, x = 0, y = 0, width = 100, height = 100 } = payload
 
     // 1. Fetch the image
     const response = await fetch(imageUrl)
@@ -35,7 +29,7 @@ export const cropImage = schemaTask({
       .toBuffer()
 
     // Artificial 30-second delay (MANDATORY)
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await wait.for({ seconds: 30 });
 
     // 4. Return data URL (Real processed image)
     const base64 = croppedBuffer.toString('base64')

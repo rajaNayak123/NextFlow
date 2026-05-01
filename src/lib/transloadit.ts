@@ -1,4 +1,4 @@
-import Transloadit from "transloadit"
+import { Transloadit } from "transloadit"
 
 export const transloadit = new Transloadit({
   authKey: process.env.TRANSLOADIT_AUTH_KEY!,
@@ -10,23 +10,22 @@ export async function uploadImage(file: File): Promise<string> {
   const buffer = Buffer.from(bytes)
 
   const assembly = await transloadit.createAssembly({
-    uploads: { "my_file": buffer },
+    uploads: { "file": buffer },
     params: {
-      auth: { key: process.env.TRANSLOADIT_AUTH_KEY! },
       steps: {
-        imported: {
+        "filtered": {
+          robot: "/file/filter",
           use: ":original",
-          robot: "/http/import",
-        },
-        exported: {
-          use: "imported",
-          robot: "/s3/store",
-          credentials: "YOUR_S3_CREDENTIALS",
-        },
-      },
+          accepts: [["jpg", "jpeg", "png", "webp", "gif"]],
+        }
+      }
     },
     waitForCompletion: true,
   })
 
-  return assembly.results.exported[0].ssl_url
+  if (!assembly?.results?.filtered?.[0]) {
+    throw new Error("Transloadit assembly failed")
+  }
+
+  return (assembly.results as any).filtered[0].ssl_url
 }

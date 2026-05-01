@@ -1,7 +1,9 @@
 import { cropImage } from "@/trigger/crop-image"
 import { gemini } from "@/trigger/gemini"
+import { flux } from "@/trigger/flux"
+import { sora } from "@/trigger/sora"
 
-// Workflow execution engine with Concurrent Fan-out
+// Workflow execution engine with Correct DAG Fan-out
 export async function executeWorkflow(
   nodes: any[],
   edges: any[],
@@ -11,40 +13,39 @@ export async function executeWorkflow(
   const results: Record<string, any> = {}
   const nodePromises = new Map<string, Promise<any>>()
 
-  // Pass 1: Pre-populate map so children can find parent promises
-  for (const node of nodes) {
-    nodePromises.set(node.id, Promise.resolve({ status: 'pending' }))
-  }
+  async function getExecutionPromise(nodeId: string): Promise<any> {
+    if (nodePromises.has(nodeId)) return nodePromises.get(nodeId)
 
-  // Pass 2: Define and trigger execution
-  for (const node of nodes) {
     const executionPromise = (async () => {
+      const node = nodes.find(n => n.id === nodeId)
+      if (!node) return { status: 'failed', error: 'Node not found' }
+
       // 1. Wait for all dependencies
-      const incomingEdges = edges.filter(e => e.target === node.id)
-      const parentPromises = incomingEdges.map(e => nodePromises.get(e.source)!)
-      
+      const incomingEdges = edges.filter(e => e.target === nodeId)
+      const parentPromises = incomingEdges.map(e => getExecutionPromise(e.source))
       await Promise.all(parentPromises)
 
       // 2. Resolve inputs from dependencies
-      const inputs = resolveInputs(node.id, nodes, edges, results)
+      const inputs = resolveInputs(nodeId, nodes, edges, results)
 
-      // 3. Skip logic: if not part of this run, use existing data as 'completed' result for children
-      if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(node.id)) {
-        results[node.id] = { status: 'completed', output: node.data }
-        return results[node.id]
+      // 3. Skip logic: for partial/single runs, if not targeted, use current data
+      const isTargeted = type === 'full' || selectedNodes.includes(nodeId)
+      if (!isTargeted) {
+        results[nodeId] = { status: 'completed', output: node.data }
+        return results[nodeId]
       }
 
       // 4. Handle built-in nodes
       if (node.type === 'request-inputs' || node.type === 'response') {
         const startTime = Date.now()
-        results[node.id] = { 
+        results[nodeId] = { 
           status: 'completed', 
           output: inputs.result || node.data,
           duration: 0,
           startTime,
           endTime: startTime
         }
-        return results[node.id]
+        return results[nodeId]
       }
 
       // 5. Execute actual node
@@ -52,21 +53,22 @@ export async function executeWorkflow(
       const result = await executeNode(node, inputs)
       const endTime = Date.now()
       
-      results[node.id] = {
+      results[nodeId] = {
         ...result,
         startTime,
         endTime,
-        duration: endTime - startTime,
+        duration: endTime - startTime, // In milliseconds
         inputs
       }
-      return results[node.id]
+      return results[nodeId]
     })()
-    
-    nodePromises.set(node.id, executionPromise)
+
+    nodePromises.set(nodeId, executionPromise)
+    return executionPromise
   }
 
-  // Wait for all node promises to settle
-  await Promise.allSettled(Array.from(nodePromises.values()))
+  // Trigger execution for all nodes (top-level nodes will trigger their children)
+  await Promise.all(nodes.map(node => getExecutionPromise(node.id)))
 
   return results
 }
@@ -112,8 +114,23 @@ async function executeNode(node: any, inputs: any) {
             model: node.data.model || "gemini-1.5-pro",
           })
           if (!result.ok) throw new Error(result.error ? String(result.error) : "Task failed")
-          // Return consistent shape: { response: string }
-          return { status: 'completed', output: { response: result.output?.output || result.output } }
+          return { status: 'completed', output: result.output } // Output already contains { response }
+  
+        case 'flux-2-pro':
+          result = await flux.triggerAndWait({
+            prompt: inputs.prompt || node.data.prompt,
+            aspectRatio: node.data.aspectRatio,
+          })
+          if (!result.ok) throw new Error(result.error ? String(result.error) : "Task failed")
+          return { status: 'completed', output: result.output }
+
+        case 'sora-2':
+          result = await sora.triggerAndWait({
+            prompt: inputs.prompt || node.data.prompt,
+            resolution: node.data.resolution,
+          })
+          if (!result.ok) throw new Error(result.error ? String(result.error) : "Task failed")
+          return { status: 'completed', output: result.output }
   
         default:
           return { status: 'skipped', error: 'Unknown node type' }
