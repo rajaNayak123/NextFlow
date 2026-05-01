@@ -32,152 +32,162 @@ const GeminiNode = ({ id, selected, data }: NodeProps) => {
   const isVideo = id.toLowerCase().includes('sora')
   const title = data.title || (isVideo ? 'Sora 2' : 'Gemini 3.1 Pro')
 
-  const InputRow = ({ label, color, id: handleId, children }: any) => (
-    <div className="flex items-center gap-2 px-4 py-2 relative group">
-      <span className={cn("w-2 h-2 rounded-full", color)} />
-      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tight flex-1">{label}</label>
-      <div className="flex-none flex items-center gap-2">
-        {children}
-        <button className="w-6 h-6 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded text-gray-400">
-           <Plus className="w-3 h-3" />
-        </button>
-      </div>
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        id={handleId}
-        className={cn("!w-3 !h-3 !border-2 !border-white !-left-1.5 transition-transform hover:scale-125", color.replace('bg-', '!bg-'))} 
-      />
-    </div>
-  )
-
   return (
     <div className={cn(
-      "bg-white border border-gray-200 rounded-xl shadow-lg min-w-[320px] overflow-hidden transition-all",
-      selected && "ring-2 ring-blue-500 shadow-xl",
+      "node-card transition-all",
+      selected && "ring-2 ring-blue-500 shadow-2xl",
       isRunning && "running-node-pulse"
     )}>
-      {/* Node Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50/30">
+      {/* Header */}
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white">
         <div className="flex items-center gap-2">
-           <Sparkles className="w-4 h-4 text-gray-400" />
-           <span className="text-xs font-bold text-gray-700">{title}</span>
+          <h3 className="font-bold text-slate-800 text-sm">{title}</h3>
+          <Info className="text-slate-400 w-3.5 h-3.5 cursor-help" />
         </div>
-        <div className="flex items-center gap-1">
-          <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><Info className="w-3.5 h-3.5" /></button>
-          <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><RotateCcw className="w-3.5 h-3.5" /></button>
+        <div className="flex gap-2">
           <button 
             onClick={() => execute('single', id)}
             disabled={isRunning}
-            className="p-1 hover:bg-emerald-50 rounded text-emerald-500 disabled:opacity-50"
+            className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-100 transition-colors disabled:opacity-50"
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
+            <Play className="w-3 h-3 fill-current" /> Run
           </button>
-          <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><MoreVertical className="w-3.5 h-3.5" /></button>
+          <button className="text-slate-400 hover:text-slate-600">
+            <MoreVertical className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       {/* Mode Switcher */}
-      <div className="p-4 pt-4">
-        <div className="flex p-1 bg-gray-100 rounded-full">
+      <div className="px-4 pt-4">
+        <div className="flex p-1 bg-slate-100 rounded-lg">
            <button 
              onClick={() => setActiveMode('text-to-image')}
-             className={cn("flex-1 py-1.5 rounded-full text-[10px] font-black uppercase transition-all", activeMode === 'text-to-image' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400")}
+             className={cn("flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all", activeMode === 'text-to-image' ? "bg-white text-slate-800 shadow-sm" : "text-slate-400")}
            >
              Text to Image
            </button>
            <button 
              onClick={() => setActiveMode('image-to-image')}
-             className={cn("flex-1 py-1.5 rounded-full text-[10px] font-black uppercase transition-all", activeMode === 'image-to-image' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400")}
+             className={cn("flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all", activeMode === 'image-to-image' ? "bg-white text-slate-800 shadow-sm" : "text-slate-400")}
            >
              Image to Image
            </button>
         </div>
       </div>
 
-      {/* Input Rows */}
-      <div className="pb-4 space-y-1">
-        <div className="px-4 pb-2 space-y-2 relative">
-           <div className="flex items-center gap-2">
-             <span className="w-2 h-2 rounded-full bg-orange-500" />
-             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">Prompt</label>
-           </div>
-           <textarea 
-             value={prompt}
-             onChange={(e) => setPrompt(e.target.value)}
-             disabled={isHandleConnected('prompt')}
-             placeholder="Enter prompt..."
-             className={cn(
-               "w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs text-gray-800 placeholder:text-gray-300 focus:ring-1 focus:ring-blue-500 min-h-[80px] resize-none font-medium outline-none",
-               isHandleConnected('prompt') && "bg-gray-100 opacity-50 cursor-not-allowed"
-             )}
-           />
-           <Handle 
-             type="target" 
-             position={Position.Left} 
-             id="prompt"
-             className="!w-3 !h-3 !bg-orange-500 !border-2 !border-white !-left-1.5" 
-           />
+      {/* Content */}
+      <div className="p-4 space-y-4">
+        {/* Input Row - Prompt */}
+        <div className="relative space-y-1">
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Prompt*</label>
+          <textarea 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            disabled={isHandleConnected('prompt')}
+            placeholder="Describe what you want the AI to do..."
+            className={cn(
+              "w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 min-h-[90px] resize-none font-medium leading-relaxed transition-all",
+              isHandleConnected('prompt') && "bg-slate-100 opacity-50 cursor-not-allowed"
+            )}
+          />
+          <Handle 
+            type="target" 
+            position={Position.Left} 
+            id="prompt"
+            className="!w-3 !h-3 !bg-orange-400 !border-none !-left-5.5" 
+          />
         </div>
 
-        <InputRow label="Resolution" color="bg-pink-500" id="resolution">
-           <div className="text-[10px] font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-100">{resolution}</div>
-        </InputRow>
+        {/* Multimodal Inputs */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="relative space-y-1">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Vision*</label>
+            <div className={cn(
+              "w-full h-10 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center group cursor-pointer transition-all",
+              isHandleConnected('startFrame') ? "bg-blue-50 border-blue-200" : "hover:border-slate-300"
+            )}>
+               <Upload className={cn("w-3.5 h-3.5 text-slate-300", isHandleConnected('startFrame') ? "text-blue-500" : "group-hover:text-slate-500")} />
+            </div>
+            <Handle type="target" position={Position.Left} id="startFrame" className="!w-3 !h-3 !bg-blue-400 !border-none !-left-5.5" />
+          </div>
+          <div className="relative space-y-1">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Audio*</label>
+            <div className={cn(
+              "w-full h-10 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center group cursor-pointer transition-all",
+              isHandleConnected('audio') ? "bg-purple-50 border-purple-200" : "hover:border-slate-300"
+            )}>
+               <Mic2 className={cn("w-3.5 h-3.5 text-slate-300", isHandleConnected('audio') ? "text-purple-500" : "group-hover:text-slate-500")} />
+            </div>
+            <Handle type="target" position={Position.Left} id="audio" className="!w-3 !h-3 !bg-purple-400 !border-none !-left-5.5" />
+          </div>
+        </div>
 
-        <InputRow label="Aspect Ratio" color="bg-yellow-500" id="aspectRatio">
-           <div className="text-[10px] font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-100">{aspectRatio}</div>
-        </InputRow>
+        {/* Dynamic Parameters */}
+        <div className="space-y-3">
+           <div className="relative flex items-center justify-between py-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolution</label>
+              <div className="bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-[10px] font-bold text-slate-700">{resolution}</div>
+              <Handle type="target" position={Position.Left} id="resolution" className="!w-3 !h-3 !bg-pink-400 !border-none !-left-5.5" />
+           </div>
+           <div className="relative flex items-center justify-between py-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aspect Ratio</label>
+              <div className="bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-[10px] font-bold text-slate-700">{aspectRatio}</div>
+              <Handle type="target" position={Position.Left} id="aspectRatio" className="!w-3 !h-3 !bg-yellow-400 !border-none !-left-5.5" />
+           </div>
+        </div>
 
-        {/* Collapsible Settings */}
-        <div className="px-4 pt-2">
+        {/* Settings Accordion */}
+        <div className="pt-2">
            <button 
              onClick={() => setShowSettings(!showSettings)}
-             className="flex items-center gap-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest"
+             className="flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
            >
              <ChevronRight className={cn("w-3 h-3 transition-transform", showSettings && "rotate-90")} />
              Settings
            </button>
            {showSettings && (
-             <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+             <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between text-[10px]">
-                   <span className="text-gray-400 font-bold uppercase">Duration</span>
-                   <span className="text-gray-700 font-bold">{duration}s</span>
+                   <span className="text-slate-400 font-bold uppercase">Duration</span>
+                   <span className="text-slate-700 font-bold">{duration}s</span>
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                   <span className="text-gray-400 font-bold uppercase">Size</span>
-                   <span className="text-gray-700 font-bold">{imageSize}</span>
+                   <span className="text-slate-400 font-bold uppercase">Batch Size</span>
+                   <span className="text-slate-700 font-bold">{numImages}</span>
                 </div>
              </div>
            )}
         </div>
 
-        {/* Inline Preview */}
-        <div className="px-4 pt-4 pb-2">
-           <div className="w-full bg-gray-50 rounded-xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center py-10 gap-2">
+        {/* Output Preview */}
+        <div className="pt-2">
+           <div className="w-full bg-slate-50 rounded-xl border border-slate-200 border-dashed flex flex-col items-center justify-center min-h-[120px] overflow-hidden">
               {data.output?.response ? (
-                 <div className="px-4 text-center">
-                    <p className="text-xs text-gray-600 font-medium line-clamp-3">{data.output.response}</p>
+                 <div className="p-4 text-center">
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-3">{data.output.response}</p>
                  </div>
               ) : isRunning ? (
                  <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Generating...</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Processing...</span>
                  </div>
               ) : (
-                 <div className="flex flex-col items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-gray-200" />
-                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">No output yet</span>
+                 <div className="flex flex-col items-center gap-2 py-8">
+                    <Sparkles className="w-4 h-4 text-slate-200" />
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No output yet</span>
                  </div>
               )}
            </div>
         </div>
       </div>
 
+      {/* Output Handle */}
       <Handle 
         type="source" 
         position={Position.Right} 
         id="response" 
-        className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !-right-1.5" 
+        className="!w-3 !h-3 !bg-blue-500 !border-none !-right-1.5" 
       />
     </div>
   )
