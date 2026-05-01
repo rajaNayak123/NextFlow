@@ -18,6 +18,8 @@ import 'reactflow/dist/style.css'
 import RequestInputsNode from '@/components/nodes/RequestInputsNode'
 import CropImageNode from '@/components/nodes/CropImageNode'
 import GeminiNode from '@/components/nodes/GeminiNode'
+import FluxNode from '@/components/nodes/FluxNode'
+import SoraNode from '@/components/nodes/SoraNode'
 import ResponseNode from '@/components/nodes/ResponseNode'
 import NodePicker from '@/components/canvas/NodePicker'
 import HistoryPanel from '@/components/canvas/HistoryPanel'
@@ -43,6 +45,8 @@ const nodeTypes: NodeTypes = {
   'request-inputs': RequestInputsNode,
   'crop-image': CropImageNode,
   'gemini-3.1-pro': GeminiNode,
+  'flux-2-pro': FluxNode,
+  'sora-2': SoraNode,
   'response': ResponseNode,
 }
 
@@ -318,24 +322,24 @@ function CanvasContent() {
           fitView
           minZoom={0.1}
           maxZoom={2}
-          className="bg-[#f8f9fa]"
+          className="bg-[#F9FAFB]"
         >
           <Background 
             variant={BackgroundVariant.Dots} 
             gap={24} 
             size={1.5}
-            color="#e5e7eb"
+            color="#E5E7EB"
           />
           <MiniMap 
             style={{ bottom: 20, right: 20 }}
             nodeStrokeColor={(n) => {
-              if (n.type === 'request-inputs') return '#3b82f6'
-              if (n.type === 'gemini-3.1-pro') return '#f97316'
-              if (n.type === 'crop-image') return '#ec4899'
-              return '#eee'
+              if (n.type === 'request-inputs') return '#64748b'
+              if (n.type === 'gemini-3.1-pro') return '#fb923c'
+              if (n.type === 'crop-image') return '#f472b6'
+              return '#cbd5e1'
             }}
             nodeColor="#fff"
-            nodeBorderRadius={8}
+            nodeBorderRadius={12}
             maskColor="rgba(0, 0, 0, 0.05)"
           />
         </ReactFlow>
@@ -347,21 +351,21 @@ function CanvasContent() {
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4">
         <button 
           onClick={() => setPickerOpen(true)}
-          className="w-14 h-14 bg-[#1a1c21] hover:bg-black text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all active:scale-95 group"
+          className="w-14 h-14 bg-slate-900 hover:bg-black text-white rounded-2xl flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all active:scale-95 group border border-white/10"
         >
           <Plus className={cn("w-6 h-6 transition-transform", pickerOpen && "rotate-45")} />
         </button>
         
-        <div className="bg-[#1a1c21] rounded-full px-6 py-3 flex items-center gap-6 shadow-2xl border border-white/10">
+        <div className="bg-slate-900 rounded-2xl px-6 py-3 flex items-center gap-6 shadow-2xl border border-white/10">
            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">System Active</span>
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">Core Active</span>
            </div>
            <div className="h-4 w-px bg-white/10" />
            <div className="flex items-center gap-4">
-              <Settings2 className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
-              <RotateCcw className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
-              <MoreHorizontal className="w-4 h-4 text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              <Settings2 className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer transition-colors" />
+              <RotateCcw className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer transition-colors" />
+              <MoreHorizontal className="w-4 h-4 text-slate-500 hover:text-white cursor-pointer transition-colors" />
            </div>
         </div>
       </div>
