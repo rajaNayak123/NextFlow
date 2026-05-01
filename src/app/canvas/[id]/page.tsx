@@ -129,20 +129,31 @@ function CanvasContent() {
 
     const isImageOutput = 
       sourceNode.type === 'crop-image' || 
-      sourceNode.type === 'gemini-3.1-pro' ||
+      sourceNode.type === 'flux-2-pro' ||
       (sourceNode.type === 'request-inputs' && sourceNode.data.fields?.find((f: any) => `${f.id}-output` === sourceHandleId)?.type === 'image')
+
+    const isVideoOutput = sourceNode.type === 'sora-2'
+    const isTextOutput = sourceNode.type === 'gemini-3.1-pro' || (sourceNode.type === 'request-inputs' && sourceNode.data.fields?.find((f: any) => `${f.id}-output` === sourceHandleId)?.type === 'text')
 
     const isImageInput = 
       (targetNode.type === 'crop-image' && targetHandleId === 'image') ||
-      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'startFrame')
+      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'startFrame') ||
+      (targetNode.type === 'flux-2-pro' && targetHandleId === 'image') ||
+      (targetNode.type === 'sora-2' && targetHandleId === 'image')
 
-    // Reject image -> text mismatch and vice versa
-    if (isImageOutput && !isImageInput && targetNode.type !== 'response') {
-        // If it's an image output, it can only go to image inputs or response
-        if (targetNode.type === 'gemini-3.1-pro' && ['prompt', 'systemPrompt', 'aspectRatio', 'duration', 'resolution', 'numImages', 'imageSize'].includes(targetHandleId)) return false
-    }
+    const isTextInput = 
+      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'prompt') ||
+      (targetNode.type === 'flux-2-pro' && targetHandleId === 'prompt') ||
+      (targetNode.type === 'sora-2' && targetHandleId === 'prompt')
+
+    // Enforcement logic
+    if (isImageOutput && !isImageInput && targetNode.type !== 'response') return false
+    if (isTextOutput && !isTextInput && targetNode.type !== 'response') return false
+    if (isVideoOutput && targetNode.type !== 'response') return false // Video only to response
     
-    if (!isImageOutput && isImageInput) return false
+    // Reverse checks
+    if (isImageInput && !isImageOutput) return false
+    if (isTextInput && !isTextOutput) return false
 
     return true
   }, [nodes, edges])
