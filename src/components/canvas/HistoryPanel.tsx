@@ -85,16 +85,14 @@ const HistoryPanel = () => {
                       {run.nodes.map((node: any) => (
                         <div key={node.id} className="p-3 bg-black/20 rounded-xl space-y-2 border border-white/5">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white truncate max-w-[150px]">{node.id.replace(/-\d+$/, '').replace(/-/g, ' ')}</span>
+                            <span className="text-xs font-bold text-white truncate max-w-[150px] capitalize">
+                              {node.id.replace(/-\d+$/, '').replace(/-/g, ' ')} / {(node.duration / 1000).toFixed(1)}s
+                            </span>
                             <span className={cn(
                               "text-[9px] font-black uppercase px-1.5 py-0.5 rounded",
                               node.status === 'completed' ? 'text-emerald-400 bg-emerald-400/10' :
                               node.status === 'failed' ? 'text-red-400 bg-red-400/10' : 'text-zinc-500'
                             )}>{node.status}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] text-zinc-500">
-                             <span>Execution Time:</span>
-                             <span className="font-mono text-zinc-300">{(node.duration / 1000).toFixed(2)}s</span>
                           </div>
                           {(node.inputs || node.output) && (
                             <div className="pt-2 space-y-1">
