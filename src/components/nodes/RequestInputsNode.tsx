@@ -3,7 +3,7 @@ import { Handle, Position, NodeProps } from 'reactflow'
 import { Plus, Info, Copy, Trash2, Maximize2, GripVertical, Type, Image as ImageIcon, Loader2, MoreVertical, RotateCcw, Hash, CheckSquare, Music, Video, FileText, X } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
-import { uploadImage } from '@/lib/transloadit'
+import { uploadImageAction } from '@/app/actions/transloadit'
 
 const inputTypes = [
   { id: 'text', name: 'Text', icon: Type, color: 'text-blue-500' },
@@ -36,7 +36,9 @@ const RequestInputsNode = ({ id, selected, data }: NodeProps) => {
   const handleFileUpload = async (fieldId: string, file: File) => {
     setUploadingFields(prev => ({ ...prev, [fieldId]: true }))
     try {
-      const url = await uploadImage(file)
+      const formData = new FormData()
+      formData.append('file', file)
+      const url = await uploadImageAction(formData)
       const newFields = fields.map((f: any) => 
         f.id === fieldId ? { ...f, value: url } : f
       )
