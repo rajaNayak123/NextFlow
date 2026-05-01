@@ -8,10 +8,10 @@
   --input-bg: #f8f9fa;
   --accent: #5e5ce6;
   --success: #34c759;
-  --handle-orange: #ff9500;
-  --handle-pink: #ff2d55;
-  --handle-blue: #007aff;
-  --handle-green: #34c759;
+  --handle-orange: #F59E0B;
+  --handle-pink: #EC4899;
+  --handle-blue: #3B82F6;
+  --handle-green: #22C55E;
 }
 
 @theme inline {
@@ -44,6 +44,22 @@ body {
 }
 
 @layer components {
+  /* Main Node Container */
+  .node-card {
+    @apply bg-white border border-slate-100 rounded-[20px] shadow-sm overflow-hidden;
+    width: 380px; /* Standard width for AI nodes */
+  }
+
+  /* Input Fields and Textareas */
+  .node-input-wrapper {
+    @apply bg-[#F8F9FA] border border-slate-100 rounded-xl p-3 text-sm;
+  }
+
+  /* Interaction Handles */
+  .react-flow__handle {
+    @apply !w-[14px] !h-[14px] !border-[3px] !border-white;
+  }
+
   .node-container {
     @apply bg-white rounded-[24px] border border-[#f1f3f5] overflow-hidden shadow-lg shadow-zinc-200/50 transition-all duration-300;
   }
@@ -63,15 +79,6 @@ body {
   .input-field-premium {
     @apply w-full bg-[#f8f9fa] border-none rounded-2xl px-4 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-accent/10 transition-all;
   }
-}
-
-.react-flow__handle {
-  width: 12px;
-  height: 12px;
-  background: white;
-  border: 3px solid #ff9500;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
 }
 
 .react-flow__handle:hover {
