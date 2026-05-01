@@ -44,7 +44,7 @@ const HistoryPanel = () => {
                     run.status === 'failed' && 'bg-red-500',
                     run.status === 'partial' && 'bg-yellow-500'
                   )} />
-                  <span className="font-medium text-white">{run.type} Run</span>
+                  <span className="font-medium text-white">{run.type} Run #{history.length - history.indexOf(run)}</span>
                 </div>
                 <div className="text-sm text-zinc-400">
                   {new Date(run.createdAt).toLocaleString()}

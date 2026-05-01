@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Info, Play, RotateCcw, MoreHorizontal, ChevronDown, Plus, Loader2 } from 'lucide-react'
+import { Info, Play, Brain, Settings2, Sparkles, ChevronRight, Loader2, MoreVertical, X, Image as ImageIcon } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflowStore'
 import { cn } from '@/lib/utils'
 
@@ -10,118 +10,107 @@ const FluxNode = ({ id, selected, data }: NodeProps) => {
   const status = useWorkflowStore((state) => state.status)
   const nodeStatus = useWorkflowStore((state) => state.nodeStatuses[id])
   const execute = useWorkflowStore((state) => state.execute)
+  const edges = useWorkflowStore((state) => state.edges)
 
-  const [activeTab, setActiveTab] = useState('Text to Image')
+  const isHandleConnected = (handleId: string) => edges.some(e => e.target === id && e.targetHandle === handleId)
+
+  const [prompt, setPrompt] = useState(data.prompt || '')
+  const [aspectRatio, setAspectRatio] = useState(data.aspectRatio || '1:1')
+  const [numImages, setNumImages] = useState(data.numImages || 1)
+  const [showSettings, setShowSettings] = useState(false)
+
+  useEffect(() => {
+    updateNode(id, { prompt, aspectRatio, numImages })
+  }, [prompt, aspectRatio, numImages])
+
   const isRunning = status === 'running' || nodeStatus === 'running'
 
   return (
     <div className={cn(
       "node-card transition-all",
-      selected && "ring-2 ring-blue-500 shadow-xl",
+      selected && "ring-2 ring-blue-500 shadow-2xl",
       isRunning && "running-node-pulse"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-800">FLUX 2 Pro</h3>
-          <div className="flex items-center gap-1.5 ml-1">
-             <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
-             <RotateCcw className="w-3.5 h-3.5 text-slate-400 cursor-pointer" />
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <Brain className="w-4 h-4 text-blue-500" />
           </div>
+          <h3 className="font-bold text-slate-800 text-sm">FLUX 2 Pro</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <button 
             onClick={() => execute('single', id)}
-            className="bg-[#22C55E] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 hover:bg-green-600 transition-colors"
+            disabled={isRunning}
+            className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-100 transition-colors disabled:opacity-50"
           >
             <Play className="w-3 h-3 fill-current" /> Run
           </button>
-          <button className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors">
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Segmented Control */}
-      <div className="px-4 pt-4">
-        <div className="flex p-1 bg-slate-100 rounded-xl">
-           {['Text to Image', 'Image to Image'].map((tab) => (
-             <button 
-               key={tab}
-               onClick={() => setActiveTab(tab)}
-               className={cn(
-                 "flex-1 py-2 rounded-lg text-[11px] font-bold transition-all",
-                 activeTab === tab 
-                   ? "bg-[#111827] text-white shadow-sm" 
-                   : "text-slate-500 hover:text-slate-700"
-               )}
-             >
-               {tab}
-             </button>
-           ))}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4 space-y-4">
-        {/* Input Rows */}
-        <div className="space-y-4">
-          {/* Prompt */}
-          <div className="relative space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-              <label className="text-xs font-semibold text-slate-600">Prompt</label>
-            </div>
-            <textarea 
-              placeholder="A futuristic city with flying cars..."
-              className="w-full bg-[#F8F9FA] border border-slate-100 rounded-xl p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 min-h-[80px] resize-none"
-            />
-            <Handle type="target" position={Position.Left} id="prompt" className="!bg-[#F59E0B]" />
-          </div>
-
-          {/* Aspect Ratio */}
-          <div className="relative space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#EC4899]" />
-              <label className="text-xs font-semibold text-slate-600">Aspect Ratio</label>
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-[#F8F9FA] border border-slate-100 rounded-xl px-3 py-2.5 flex items-center justify-between cursor-pointer group">
-                <span className="text-sm text-slate-700">16:9</span>
-                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-              </div>
-              <button className="w-10 h-10 flex items-center justify-center bg-[#F8F9FA] border border-slate-100 rounded-xl text-slate-400 hover:bg-slate-100 transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            <Handle type="target" position={Position.Left} id="aspectRatio" className="!bg-[#EC4899]" />
-          </div>
+        {/* Prompt */}
+        <div className="relative space-y-1">
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Image Prompt*</label>
+          <textarea 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            disabled={isHandleConnected('prompt')}
+            placeholder="Describe the image you want to generate..."
+            className={cn(
+              "w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 min-h-[100px] resize-none font-medium leading-relaxed transition-all",
+              isHandleConnected('prompt') && "bg-slate-100 opacity-50"
+            )}
+          />
+          <Handle type="target" position={Position.Left} id="prompt" className="!w-3 !h-3 !bg-orange-400 !border-none !-left-5.5" />
         </div>
 
-        {/* Output Box */}
+        {/* Dynamic Parameters */}
+        <div className="grid grid-cols-2 gap-4">
+           <div className="relative space-y-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aspect Ratio</label>
+              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-[10px] font-bold text-slate-700 outline-none">
+                 <option>1:1</option>
+                 <option>4:3</option>
+                 <option>16:9</option>
+              </select>
+           </div>
+           <div className="relative space-y-1">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Batch Size</label>
+              <input type="number" min="1" max="4" value={numImages} onChange={(e) => setNumImages(parseInt(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-[10px] font-bold text-slate-700 outline-none" />
+           </div>
+        </div>
+
+        {/* Output Preview */}
         <div className="pt-2">
-          <div className="w-full bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center min-h-[160px] relative group overflow-hidden">
-             {isRunning ? (
-               <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generating...</span>
-               </div>
-             ) : (
-               <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-slate-300" />
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generated Image</span>
-               </div>
-             )}
-             <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm border border-slate-100 rounded-lg px-2 py-1">
-                <span className="text-[10px] font-bold text-slate-500">~0.80M</span>
-             </div>
-          </div>
+           <div className="w-full bg-slate-50 rounded-xl border border-slate-200 border-dashed flex flex-col items-center justify-center min-h-[150px] overflow-hidden">
+              {data.output?.imageUrl || data.output?.response ? (
+                 <img src={data.output.imageUrl || data.output.response} alt="Generated" className="w-full h-full object-cover" />
+              ) : isRunning ? (
+                 <div className="flex flex-col items-center gap-2 py-10">
+                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating...</span>
+                 </div>
+              ) : (
+                 <div className="flex flex-col items-center gap-2 py-10">
+                    <ImageIcon className="w-4 h-4 text-slate-200" />
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No image yet</span>
+                 </div>
+              )}
+           </div>
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} id="output" className="!bg-[#22C55E]" />
+      {/* Output Handle */}
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        id="response" 
+        className="!w-3 !h-3 !bg-blue-500 !border-none !-right-1.5" 
+      />
     </div>
   )
 }

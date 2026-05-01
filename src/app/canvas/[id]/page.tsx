@@ -88,6 +88,14 @@ function CanvasContent() {
     }
   }, [workflowId, loadWorkflow])
 
+  // Auto-save logic (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveWorkflow()
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [nodes, edges, saveWorkflow])
+
   const onConnect = useCallback(
     (params: Connection) => {
       saveHistory()
@@ -100,11 +108,13 @@ function CanvasContent() {
   const isValidConnection = useCallback((connection: Connection) => {
     if (connection.source === connection.target) return false
 
+    // Fix: use latest state for nodes/edges
+    const { nodes, edges } = useWorkflowStore.getState()
     const sourceNode = nodes.find((n: any) => n.id === connection.source)
     const targetNode = nodes.find((n: any) => n.id === connection.target)
     if (!sourceNode || !targetNode) return false
 
-    // DAG Cycle detection
+    // DAG Cycle detection - use latest edges
     const hasCycle = (source: string, target: string) => {
       const visited = new Set<string>()
       const queue = [target]
@@ -137,26 +147,25 @@ function CanvasContent() {
 
     const isImageInput = 
       (targetNode.type === 'crop-image' && targetHandleId === 'image') ||
-      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'startFrame') ||
+      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'vision') ||
       (targetNode.type === 'flux-2-pro' && targetHandleId === 'image') ||
       (targetNode.type === 'sora-2' && targetHandleId === 'image')
 
     const isTextInput = 
-      (targetNode.type === 'gemini-3.1-pro' && targetHandleId === 'prompt') ||
+      (targetNode.type === 'gemini-3.1-pro' && (targetHandleId === 'prompt' || targetHandleId === 'systemPrompt')) ||
       (targetNode.type === 'flux-2-pro' && targetHandleId === 'prompt') ||
       (targetNode.type === 'sora-2' && targetHandleId === 'prompt')
 
     // Enforcement logic
     if (isImageOutput && !isImageInput && targetNode.type !== 'response') return false
     if (isTextOutput && !isTextInput && targetNode.type !== 'response') return false
-    if (isVideoOutput && targetNode.type !== 'response') return false // Video only to response
+    if (isVideoOutput && targetNode.type !== 'response') return false 
     
-    // Reverse checks
     if (isImageInput && !isImageOutput) return false
     if (isTextInput && !isTextOutput) return false
 
     return true
-  }, [nodes, edges])
+  }, [])
 
   const onNodesChange = useCallback(
     (changes: any[]) => {

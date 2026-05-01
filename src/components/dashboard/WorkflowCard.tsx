@@ -60,6 +60,12 @@ export default function WorkflowCard({ workflow, onDelete, onRename }: WorkflowC
               <Clock className="w-3 h-3" />
               Edited {formatDistanceToNow(new Date(workflow.updatedAt))} ago
             </div>
+            {workflow.status === 'running' && (
+              <div className="mt-2 flex items-center gap-1.5">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Executing...</span>
+              </div>
+            )}
           </div>
           
           <div className="relative" ref={menuRef}>
@@ -96,7 +102,17 @@ export default function WorkflowCard({ workflow, onDelete, onRename }: WorkflowC
                   <Copy className="w-4 h-4 text-zinc-400" />
                   Duplicate
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-[#1a1c21] hover:bg-[#f8f9fa] transition-colors">
+                <button 
+                  onClick={() => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workflow, null, 2))
+                    const a = document.createElement('a')
+                    a.href = dataStr
+                    a.download = `${workflow.name}.json`
+                    a.click()
+                    setShowMenu(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-[#1a1c21] hover:bg-[#f8f9fa] transition-colors"
+                >
                   <FileJson className="w-4 h-4 text-zinc-400" />
                   Export JSON
                 </button>

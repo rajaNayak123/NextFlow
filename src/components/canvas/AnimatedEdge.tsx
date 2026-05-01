@@ -13,10 +13,9 @@ export default function AnimatedEdge({ id, sourceX, sourceY, targetX, targetY }:
         markerEnd="url(#arrow)"
       />
       <path
-        className="stroke-blue-500/80 stroke-[4px] fill-none opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse"
+        className="stroke-blue-500/80 stroke-[4px] fill-none opacity-0 group-hover:opacity-100 transition-all duration-300 edge-flow-animation"
         d={edgePath}
         strokeLinecap="round"
-        strokeDasharray="10,10"
       />
     </>
   )

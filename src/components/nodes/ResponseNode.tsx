@@ -36,7 +36,7 @@ const ResponseNode = ({ id, selected, data }: NodeProps) => {
         <Handle 
           type="target" 
           position={Position.Left} 
-          id="collection"
+          id="result"
           className="!bg-[#A855F7]"
           style={{ left: '-7px' }}
         />

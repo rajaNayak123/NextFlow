@@ -1,4 +1,5 @@
-import { tasks } from "@/lib/trigger"
+import { cropImage } from "@/trigger/crop-image"
+import { gemini } from "@/trigger/gemini"
 
 // Workflow execution engine with Concurrent Fan-out
 export async function executeWorkflow(
@@ -10,22 +11,26 @@ export async function executeWorkflow(
   const results: Record<string, any> = {}
   const nodePromises = new Map<string, Promise<any>>()
 
-  // Initialize all nodes
+  // Pass 1: Pre-populate map so children can find parent promises
   for (const node of nodes) {
-    nodePromises.set(node.id, (async () => {
+    nodePromises.set(node.id, Promise.resolve({ status: 'pending' }))
+  }
+
+  // Pass 2: Define and trigger execution
+  for (const node of nodes) {
+    const executionPromise = (async () => {
       // 1. Wait for all dependencies
       const incomingEdges = edges.filter(e => e.target === node.id)
-      const parentPromises = incomingEdges.map(e => nodePromises.get(e.source))
+      const parentPromises = incomingEdges.map(e => nodePromises.get(e.source)!)
       
-      // Wait for all parent nodes to complete
       await Promise.all(parentPromises)
 
       // 2. Resolve inputs from dependencies
       const inputs = resolveInputs(node.id, nodes, edges, results)
 
-      // 3. Skip if partial run and not selected
+      // 3. Skip logic: if not part of this run, use existing data as 'completed' result for children
       if (type !== 'full' && selectedNodes.length > 0 && !selectedNodes.includes(node.id)) {
-        results[node.id] = { status: 'skipped', output: node.data }
+        results[node.id] = { status: 'completed', output: node.data }
         return results[node.id]
       }
 
@@ -34,7 +39,7 @@ export async function executeWorkflow(
         const startTime = Date.now()
         results[node.id] = { 
           status: 'completed', 
-          output: node.data,
+          output: inputs.result || node.data,
           duration: 0,
           startTime,
           endTime: startTime
@@ -52,10 +57,12 @@ export async function executeWorkflow(
         startTime,
         endTime,
         duration: endTime - startTime,
-        inputs // Store inputs for history
+        inputs
       }
       return results[node.id]
-    })())
+    })()
+    
+    nodePromises.set(node.id, executionPromise)
   }
 
   // Wait for all node promises to settle
@@ -86,29 +93,26 @@ async function executeNode(node: any, inputs: any) {
       let result
       switch (node.type) {
         case 'crop-image':
-          result = await tasks.triggerAndWait("crop-image", {
+          result = await cropImage.triggerAndWait({
             imageUrl: inputs.image || node.data.image,
             x: Number(inputs.x || node.data.x || 0),
             y: Number(inputs.y || node.data.y || 0),
             width: Number(inputs.width || node.data.w || 100),
             height: Number(inputs.height || node.data.h || 100),
           })
-          if (!result.ok) {
-            throw new Error(result.error ? String(result.error) : "Task failed")
-          }
+          if (!result.ok) throw new Error(result.error ? String(result.error) : "Task failed")
           return { status: 'completed', output: result.output }
   
         case 'gemini-3.1-pro':
-          const images = inputs.startFrame ? [{ base64: inputs.startFrame, mimeType: "image/png" }] : (inputs.images || [])
-          result = await tasks.triggerAndWait("gemini-3.1-pro", {
+          const images = inputs.vision ? [{ base64: inputs.vision, mimeType: "image/png" }] : []
+          result = await gemini.triggerAndWait({
             prompt: inputs.prompt || node.data.prompt,
             systemPrompt: inputs.systemPrompt || node.data.systemPrompt,
             images: images,
             model: node.data.model || "gemini-1.5-pro",
           })
-          if (!result.ok) {
-            throw new Error(result.error ? String(result.error) : "Task failed")
-          }
+          if (!result.ok) throw new Error(result.error ? String(result.error) : "Task failed")
+          // Return consistent shape: { response: string }
           return { status: 'completed', output: { response: result.output?.output || result.output } }
   
         default:

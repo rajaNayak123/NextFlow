@@ -46,8 +46,9 @@ body {
 @layer components {
   /* Main Node Container */
   .node-card {
-    @apply bg-white border border-slate-100 rounded-[20px] shadow-sm overflow-hidden;
-    width: 380px; /* Standard width for AI nodes */
+    @apply bg-white border border-slate-100 rounded-[20px] shadow-sm;
+    width: 380px;
+    position: relative;
   }
 
   /* Input Fields and Textareas */
@@ -114,21 +115,25 @@ body {
 }
 
 /* Animations */
-@keyframes pulse-ring {
-  0% { transform: scale(.8); opacity: 0.5; }
-  100% { transform: scale(1.5); opacity: 0; }
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 0 0px rgba(94, 92, 230, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(94, 92, 230, 0); }
+  100% { box-shadow: 0 0 0 0px rgba(94, 92, 230, 0); }
 }
 
 .running-node-pulse {
-  position: relative;
+  animation: glow-pulse 2s infinite;
+  border-color: var(--accent) !important;
+  z-index: 10;
 }
 
-.running-node-pulse::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 28px;
-  border: 2px solid var(--accent);
-  animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes edge-flow {
+  from { stroke-dashoffset: 15; }
+  to { stroke-dashoffset: 0; }
+}
+
+.edge-flow-animation {
+  stroke-dasharray: 10, 5;
+  animation: edge-flow 1s linear infinite;
 }
 

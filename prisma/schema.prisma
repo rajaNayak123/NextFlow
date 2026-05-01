@@ -17,8 +17,8 @@ model Workflow {
   id      String @id @default(cuid())
   name    String @default("Untitled Workflow")
   userId  String
-  nodes   Json[]
-  edges   Json[]
+  nodes   Json
+  edges   Json
   status  String @default("idle") // idle, running, completed, failed
   version Int    @default(1)
 
@@ -35,7 +35,7 @@ model Execution {
   status     String // pending, running, completed, failed, partial
   type       String // full, partial, single
   duration   Float? // seconds
-  nodes      Json[] // node execution details
+  nodes      Json // node execution details
   error      String?
 
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)

@@ -18,22 +18,27 @@ interface NodeItem {
 const NodePicker = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [search, setSearch] = useState('')
   const addNode = useWorkflowStore((state) => state.addNode)
+  const recentNodes = useWorkflowStore((state) => state.recentNodes)
 
   const nodeCategories: Record<string, NodeItem[]> = {
-    'Recent': [
-      { id: 'flux-2-pro', type: 'flux-2-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'Recent', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
+    'Recent': recentNodes.map(type => {
+      const allNodes = [
+        { id: 'gemini-3.1-pro', type: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', icon: <Sparkles className="w-6 h-6 text-orange-500" />, category: 'AI Models', description: 'Google Gemini 1.5 Pro' },
+        { id: 'flux-2-pro', type: 'flux-2-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'AI Models', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
+        { id: 'sora-2', type: 'sora-2', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'AI Models', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
+        { id: 'crop-image', type: 'crop-image', name: 'Crop Image', icon: <Scissors className="w-6 h-6 text-orange-500" />, category: 'Image', description: 'Transform and crop images' },
+      ] as NodeItem[]
+      return allNodes.find(n => n.type === type)
+    }).filter((n): n is NodeItem => !!n),
+    'AI Models': [
+      { id: 'gemini-3.1-pro', type: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', icon: <Sparkles className="w-6 h-6 text-orange-500" />, category: 'AI Models', description: 'Google Gemini 1.5 Pro' },
+      { id: 'flux-2-pro', type: 'flux-2-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'AI Models', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
+      { id: 'sora-2', type: 'sora-2', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'AI Models', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
     ],
     'Image': [
       { id: 'crop-image', type: 'crop-image', name: 'Crop Image', icon: <Scissors className="w-6 h-6 text-orange-500" />, category: 'Image', description: 'Transform and crop images' },
     ],
-    'Video': [
-      { id: 'sora-2', type: 'sora-2', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'Video', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
-    ],
-    'Audio': [],
-    'Others': [
-       { id: 'request-inputs', type: 'request-inputs', name: 'Request Inputs', icon: <Plus className="w-6 h-6 text-zinc-500" />, category: 'Others', description: 'User input fields' },
-       { id: 'response', type: 'response', name: 'Response', icon: <Sparkles className="w-6 h-6 text-green-500" />, category: 'Others', description: 'Final output container' },
-    ]
+    'Others': []
   }
 
   const handleAddNode = (node: NodeItem) => {

@@ -102,27 +102,32 @@ const CropImageNode = ({ id, selected, data }: NodeProps) => {
            </div>
         </div>
 
-        {/* Settings / Size */}
-        <div className="space-y-2">
-           <button 
-             onClick={() => setShowSettings(!showSettings)}
-             className="flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
-           >
-             <ChevronRight className={cn("w-3 h-3 transition-transform", showSettings && "rotate-90")} />
-             Advanced Settings
-           </button>
-           {showSettings && (
-             <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="space-y-1">
-                   <label className="text-[9px] font-black text-slate-400 uppercase">Width (%)</label>
-                   <input type="number" defaultValue={data.w ?? 100} onChange={(e) => handleChange('w', e.target.value)} className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-[10px] font-bold text-slate-700" />
-                </div>
-                <div className="space-y-1">
-                   <label className="text-[9px] font-black text-slate-400 uppercase">Height (%)</label>
-                   <input type="number" defaultValue={data.h ?? 100} onChange={(e) => handleChange('h', e.target.value)} className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-[10px] font-bold text-slate-700" />
-                </div>
-             </div>
-           )}
+        {/* Dimensions - Standard Inputs */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1 relative">
+            <div className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+               <label className="text-[9px] font-black text-slate-400 uppercase">Width (%)</label>
+            </div>
+            <input 
+              type="number" 
+              defaultValue={data.w ?? 100} 
+              onChange={(e) => handleChange('w', e.target.value)} 
+              className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500/50" 
+            />
+          </div>
+          <div className="space-y-1 relative">
+            <div className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+               <label className="text-[9px] font-black text-slate-400 uppercase">Height (%)</label>
+            </div>
+            <input 
+              type="number" 
+              defaultValue={data.h ?? 100} 
+              onChange={(e) => handleChange('h', e.target.value)} 
+              className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[10px] font-bold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500/50" 
+            />
+          </div>
         </div>
 
         {/* Inline Preview */}

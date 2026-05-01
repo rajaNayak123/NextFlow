@@ -12,6 +12,7 @@ interface WorkflowState {
   workflowId?: string
   status: 'idle' | 'running' | 'completed' | 'failed'
   nodeStatuses: Record<string, 'idle' | 'running' | 'completed' | 'failed'>
+  recentNodes: string[]
   
   setNodes: (nodes: WorkflowNode[] | ((nodes: WorkflowNode[]) => WorkflowNode[])) => void
   setEdges: (edges: WorkflowEdge[] | ((edges: WorkflowEdge[]) => WorkflowEdge[])) => void
@@ -55,6 +56,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   redoStack: [],
   status: 'idle',
   nodeStatuses: {},
+  recentNodes: [],
 
   setNodes: (nodes) => set((state) => ({ 
     nodes: typeof nodes === 'function' ? nodes(state.nodes) : nodes 
@@ -62,7 +64,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   setEdges: (edges) => set((state) => ({ 
     edges: typeof edges === 'function' ? edges(state.edges) : edges 
   })),
-  addNode: (node) => set((state) => ({ nodes: [...state.nodes, node] })),
+  addNode: (node) => set((state) => ({ 
+    nodes: [...state.nodes, node],
+    recentNodes: [node.type, ...state.recentNodes.filter(t => t !== node.type)].slice(0, 5)
+  })),
   updateNode: (nodeId, data) => set((state) => ({
     nodes: state.nodes.map(n => n.id === nodeId ? { ...n, data: { ...n.data, ...data } } : n)
   })),

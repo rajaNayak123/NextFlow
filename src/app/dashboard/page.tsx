@@ -98,7 +98,39 @@ export default function Dashboard() {
             <Key className="w-4 h-4" />
             API Keys
           </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#f1f3f5] rounded-xl text-sm font-bold text-[#1a1c21] hover:bg-[#f8f9fa] transition-all">
+          <button 
+            onClick={() => {
+               const input = document.createElement('input')
+               input.type = 'file'
+               input.accept = 'application/json'
+               input.onchange = async (e: any) => {
+                  const file = e.target.files[0]
+                  if (file) {
+                     const reader = new FileReader()
+                     reader.onload = async (re) => {
+                        try {
+                           const workflowData = JSON.parse(re.target?.result as string)
+                           const res = await fetch('/api/workflows', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ 
+                                 name: workflowData.name + " (Imported)",
+                                 nodes: workflowData.nodes,
+                                 edges: workflowData.edges
+                              })
+                           })
+                           if (res.ok) fetchWorkflows()
+                        } catch (err) {
+                           alert("Invalid JSON file")
+                        }
+                     }
+                     reader.readAsText(file)
+                  }
+               }
+               input.click()
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#f1f3f5] rounded-xl text-sm font-bold text-[#1a1c21] hover:bg-[#f8f9fa] transition-all"
+          >
             <Download className="w-4 h-4" />
             Import
           </button>
