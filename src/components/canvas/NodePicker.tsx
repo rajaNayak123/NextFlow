@@ -21,13 +21,13 @@ const NodePicker = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
   const nodeCategories: Record<string, NodeItem[]> = {
     'Recent': [
-      { id: 'flux-2-pro', type: 'gemini-3.1-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'Recent', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
+      { id: 'flux-2-pro', type: 'flux-2-pro', name: 'FLUX 2 Pro', icon: <Brain className="w-6 h-6 text-blue-500" />, category: 'Recent', description: 'AI Image Generator', defaultData: { title: 'FLUX 2 Pro', type: 'image' } },
     ],
     'Image': [
       { id: 'crop-image', type: 'crop-image', name: 'Crop Image', icon: <Scissors className="w-6 h-6 text-orange-500" />, category: 'Image', description: 'Transform and crop images' },
     ],
     'Video': [
-      { id: 'sora-2', type: 'gemini-3.1-pro', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'Video', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
+      { id: 'sora-2', type: 'sora-2', name: 'Sora 2', icon: <Film className="w-6 h-6 text-purple-500" />, category: 'Video', description: 'AI Video Generator', defaultData: { title: 'Sora 2', type: 'video' } },
     ],
     'Audio': [],
     'Others': [
